@@ -1,0 +1,17 @@
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# React Native
+ios/Pods/
+ios/Podfile.lock
+ios/MyApp
+android/build/
+android/app/build/
+android/gradle/
+android/local.properties
+
+# Miscellaneous
+.DS_Store
+.env
