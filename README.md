@@ -1,4 +1,4 @@
-# Onlysubs
+# Onlysubs/Sugarbaby
 
 ## Installation Steps
 
