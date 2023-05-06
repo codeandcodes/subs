@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const yaml = require('js-yaml');
-const { createSquareClient, getCatalogItems, createSubscription } = require('./square.js');
+const { createSquareClient, getCatalogItems, createSubscription, getLocations } = require('./square.js');
 const { Client, Environment } = require('square');
 
 const app = express();
@@ -30,7 +30,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/location', (req, res) => {
-
+    getLocations(squareClient);
     res.send('Welcome to the backend!');
 });
 

@@ -58,4 +58,4 @@ async function getLocations(squareClient) {
 }
 
 // Export the functions
-module.exports = { createSquareClient, getCatalogItems, createSubscription };
+module.exports = { createSquareClient, getCatalogItems, createSubscription, getLocations };
