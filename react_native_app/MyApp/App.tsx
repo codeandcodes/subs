@@ -7,8 +7,9 @@ const App = (): JSX.Element => {
 
   useEffect(() => {
     const fetchData = async (): Promise<void> => {
-      const data: string = await fetchBackendData();
-      setBackendData(data);
+      const data: string | undefined = await fetchBackendData();
+
+      if (data) setBackendData(data);
     };
 
     fetchData();
