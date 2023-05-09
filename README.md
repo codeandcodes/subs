@@ -7,6 +7,19 @@
 - install homebrew https://brew.sh/
 - install react native cli https://reactnative.dev/docs/next/environment-setup?guide=native
 - install xcode for iOS simulator https://apps.apple.com/us/app/xcode/id497799835?mt=12
+- install protobuf (note must be 3.20.x)
+  - there's a bug with protoc 21.x and up which no longer includes the js compiler. There's a workaround: 
+  ```
+  # on mac
+  brew install protobuf@3
+  echo 'export PATH="/opt/homebrew/opt/protobuf@3/bin:$PATH"' >> ~/.zshrc
+  protoc --version
+  # should be libprotoc 3.20.3
+  ```
+- install protobuf typescript generator
+  ```
+  npm install -g ts-protoc-gen
+  ```
 
 
 ## Environment Setup Steps
@@ -20,7 +33,6 @@
   cd backend
   ```
 
-
 3. Install the required dependencies:
   ``` 
   npm install
@@ -29,6 +41,13 @@
 4. Start the backend server:
   ``` 
   node server.js config.yaml
+  ```
+
+### Proto Setup
+
+1. Compile protos for backend (in src root dir)
+  ```
+  protoc --proto_path=./proto --js_out=import_style=commonjs,binary:./backend ./proto/*.proto
   ```
 
 ### React Native Setup

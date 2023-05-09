@@ -4,6 +4,8 @@ const fs = require('fs');
 const yaml = require('js-yaml');
 const { createSquareClient, getCatalogItems, createSubscription, getLocations } = require('./square.js');
 const { Client, Environment } = require('square');
+const protobuf = require('google-protobuf');
+const { Subscription } = require('./subscription_pb');
 
 const app = express();
 
@@ -31,7 +33,23 @@ app.get('/', (req, res) => {
 
 app.get('/location', (req, res) => {
     getLocations(squareClient);
+
+    // Create a new subscription object
+    const subscription = new Subscription();
+
+    // Set some example fields
+    subscription.setId('123');
+    subscription.setAmount(1000);
+    subscription.setDescription('Example subscription');
+    
+
+    // Log the fields
+    console.log(subscription.getId());
+    console.log(subscription.getAmount());
+    console.log(subscription.getDescription());
     res.send('Welcome to the backend!');
+        
+        
 });
 
 // Start the server
