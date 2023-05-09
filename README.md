@@ -16,11 +16,6 @@
   protoc --version
   # should be libprotoc 3.20.3
   ```
-- install protobuf typescript generator
-  ```
-  npm install -g ts-protoc-gen
-  ```
-
 
 ## Environment Setup Steps
 
