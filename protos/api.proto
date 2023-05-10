@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package subs;
+
+import "google/api/annotations.proto";
+
+option go_package = "github.com/codeandcodes/subs/protos";
+
+service SubscriptionService {
+  // Setup a new subscription
+  rpc SetupSubscription(SubscriptionSetupRequest) returns (SubscriptionSetupResponse) {
+    option (google.api.http) = {
+      post: "/v1/echo"
+      body: "*"
+    };
+  }
+
+  // Returns a list of subscriptions 
+  rpc GetSubscriptions(GetSubscriptionRequest) returns (GetSubscriptionsResponse) {}
+}
+
+message SubscriptionSetupRequest {
+  string name = 1;
+}
+
+message SubscriptionSetupResponse {
+  string message = 1;
+}
+
+message GetSubscriptionRequest {
+  string user_id = 1;
+}
+
+message GetSubscriptionsResponse {
+  string message = 1;
+}
