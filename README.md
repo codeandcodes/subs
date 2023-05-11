@@ -116,6 +116,7 @@ set ruby version with rbenv
   rbenv global 2.7.6
   ```
 
+  If you have errors running iOS app using npx, try manually installing dependencies
   ``` 
   cd MyApp
   bundle install
