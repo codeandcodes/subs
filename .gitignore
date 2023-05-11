@@ -11,6 +11,7 @@ android/build/
 android/app/build/
 android/gradle/
 android/local.properties
+ios/MyApp.xcodeproj/project.pbxproj
 
 # Miscellaneous
 .DS_Store

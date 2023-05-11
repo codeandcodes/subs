@@ -88,7 +88,7 @@
 
 2. Navigate to the app directory:
   ``` 
-  cd react_native_app
+  cd react_native_app/MyApp
   ```
 
 3. Install the required dependencies:
