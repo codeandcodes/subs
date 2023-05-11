@@ -60,7 +60,7 @@ Prerequisites:
   go run main.go
   ```
 
-5. Start the http gateway server (runs on port 3000):
+5. Start a new terminal window/tab. Start the http gateway server (runs on port 3000):
   ``` 
   cd backend/httpserver
   go run main.go
