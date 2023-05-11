@@ -19,11 +19,15 @@
 
 ## Environment Setup Steps
 
+1. Clone the repository
+  ```
+  git clone git@github.com:codeandcodes/subs.git 
+  ```
+
 ### Backend Setup
 
-1. Clone the repository:
-  ```
-  ```
+Prerequisites:
+- note: instructions all relative from where you cloned the repo. E.g. ~/workspace/subs
 
 2. Navigate to the backend directory:
   ``` 
@@ -70,6 +74,11 @@
 
 ### Example curl
 
+1. Check if backend server is responding
+  ```
+  curl -X GET http://localhost:3000/
+  # output: Hello, this is the root route!%
+  ```
 
 ### Proto Setup
 
