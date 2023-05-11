@@ -4,11 +4,22 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"time"
 
 	subspb "github.com/codeandcodes/subs/protos"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
 )
+
+func heartbeat() {
+	seconds := 0
+	for {
+		time.Sleep(10 * time.Second)
+		seconds += 10
+		log.Printf("Server is running...%d seconds elapsed\n", seconds)
+
+	}
+}
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
@@ -36,9 +47,12 @@ func main() {
 	mux.Handle("/", httpmux)  // non-gRPC routes
 	mux.Handle("/v1/", gwmux) // gRPC routes
 
+	go heartbeat()
+
 	// Start the HTTP server with the mux as the default handler.
 	err = http.ListenAndServe(":3000", mux)
 	if err != nil {
 		log.Fatalf("failed to start HTTP server: %v", err)
 	}
+
 }
