@@ -56,8 +56,10 @@ Prerequisites:
 
 4. Start the backend gRPC server:
   ``` 
+  # edit config.yaml
+  # add access_token to config.yaml, then
   cd backend/grpcserver
-  go run main.go
+  go run main.go --config=config.yaml
   ```
 
 5. Start a new terminal window/tab. Start the http gateway server (runs on port 3000):
