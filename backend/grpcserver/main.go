@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	"log"
@@ -9,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/codeandcodes/subs/backend/grpcserver/services"
 	pb "github.com/codeandcodes/subs/protos"
 	"github.com/jefflinse/square-connect-go-sdk/square"
 	"google.golang.org/grpc"
@@ -34,18 +34,6 @@ func heartbeat() {
 		log.Printf("Server is running...%d seconds elapsed\n", seconds)
 
 	}
-}
-
-func (s *server) SetupSubscription(ctx context.Context, in *pb.SubscriptionSetupRequest) (*pb.SubscriptionSetupResponse, error) {
-	// TODO: Add your setup subscription logic here
-
-	return &pb.SubscriptionSetupResponse{Message: "SetupSubscription has been called"}, nil
-}
-
-func (s *server) GetSubscriptions(ctx context.Context, in *pb.GetSubscriptionRequest) (*pb.GetSubscriptionsResponse, error) {
-	// TODO: Add your get subscriptions logic here
-
-	return &pb.GetSubscriptionsResponse{Message: "GetSubscriptions has been called"}, nil
 }
 
 func main() {
@@ -74,14 +62,20 @@ func main() {
 		log.Fatalf("Square access token is not provided in the config")
 	}
 
+	// Instantiate Services
+	square_client := square.NewAPIClient(cfg)
+	service := &services.SubscriptionService{
+		Client: square_client,
+	}
 	log.Printf("Square API configuration: %+v\n", cfg)
 
+	// Register services and start server
 	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 	s := grpc.NewServer()
-	pb.RegisterSubscriptionServiceServer(s, &server{})
+	pb.RegisterSubscriptionServiceServer(s, service)
 	log.Println("Server is running on port 50051...")
 
 	go heartbeat()
