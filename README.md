@@ -37,7 +37,7 @@ Prerequisites:
 3. Install the required dependencies:
   ``` 
   go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@latest
-  go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger@latest
+  go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@latest
   go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
   go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
   ```
@@ -74,7 +74,7 @@ Prerequisites:
   go mod tidy
   ```
 
-### Example curl
+### API Documentation
 
 1. Check if backend server is responding
   ```
@@ -82,15 +82,41 @@ Prerequisites:
   # output: Hello, this is the root route!%
   ```
 
+2. [Optional] Swagger UI to browse APIs
+- clone swagger UI repo
+  ```
+  git clone https://github.com/swagger-api/swagger-ui.git
+  cd swagger-ui
+  npm run dev
+  # Wait a bit
+  # Open http://localhost:3200/
+  In searchbox, type in
+  http://localhost:3000/static/api.swagger.json
+  ```
+
+- [Optional] You can also modify swagger-ui/dev-helpers/dev-helper-initializer.js to automatically load this whenever your run $ npm run dev.
+  - modify the line in dev-helper-initializer.js url to "http://localhost:3000/swagger/api.swagger.json"
+
+
 ### Proto Setup
 
 1. Compile protos for backend (in src root dir). Ensure that googleapis references where you cloned the repo.
   ```
+  # from repo root /
   protoc --proto_path=./protos --proto_path=$HOME/workspace/googleapis \
     --go_out=protos --go_opt=paths=source_relative \
     --go-grpc_out=protos --go-grpc_opt=paths=source_relative \
     --grpc-gateway_out=protos --grpc-gateway_opt=paths=source_relative \
     protos/*.proto
+  ```
+
+2. [Optional] Generate OpenAPIv2 files
+  ```
+  # from repo root /
+  protoc -I . --proto_path=./protos --proto_path=$HOME/workspace/googleapis \
+    --openapiv2_out ./backend/httpserver/static \
+    --openapiv2_opt logtostderr=true \
+    protos/api.proto
   ```
 
 ### React Native Setup

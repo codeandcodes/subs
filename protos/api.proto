@@ -3,6 +3,7 @@ syntax = "proto3";
 package subs;
 
 import "google/api/annotations.proto";
+import "common.proto";
 
 option go_package = "github.com/codeandcodes/subs/protos";
 
@@ -10,17 +11,35 @@ service SubscriptionService {
   // Setup a new subscription
   rpc SetupSubscription(SubscriptionSetupRequest) returns (SubscriptionSetupResponse) {
     option (google.api.http) = {
-      post: "/v1/echo"
+      post: "/v1/setupSubscription"
       body: "*"
     };
   }
 
   // Returns a list of subscriptions 
-  rpc GetSubscriptions(GetSubscriptionRequest) returns (GetSubscriptionsResponse) {}
+  rpc GetSubscriptions(GetSubscriptionRequest) returns (GetSubscriptionsResponse) {
+    option (google.api.http) = {
+      get: "/v1/getSubscriptions"
+    };
+  }
 }
 
 message SubscriptionSetupRequest {
   string name = 1;
+
+  // denomination in USD, no decimals 
+  int32 amount = 2; 
+  string description = 3;
+ 
+  // Payer / Payee 
+  // These represent already accepted payer/payee relationships
+  // possible to have multiple payees (e.g. pay me and my brother)
+  repeated subs.User payee = 4;
+  // possible to have multiple payers (1 to many request for payment. e.g. me to all my roommates)
+  repeated subs.User payer = 5;
+
+  // SubscriptionFrequency
+  subs.SubscriptionFrequency subscription_frequency = 6;
 }
 
 message SubscriptionSetupResponse {

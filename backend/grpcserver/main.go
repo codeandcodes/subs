@@ -26,6 +26,8 @@ type server struct {
 	pb.UnimplementedSubscriptionServiceServer
 }
 
+const SQUARE_SANDBOX = "https://connect.squareupsandbox.com"
+
 func heartbeat() {
 	seconds := 0
 	for {
@@ -56,6 +58,10 @@ func main() {
 
 	// Create Square client with access token from config file
 	cfg := square.NewConfiguration()
+	if config.Square.Environment == "sandbox" {
+		log.Printf("Setting basepath to sandbox: %+v\n", SQUARE_SANDBOX)
+		cfg.BasePath = SQUARE_SANDBOX
+	}
 	cfg.AddDefaultHeader("Authorization", fmt.Sprintf("Bearer %s", config.Square.AccessToken))
 
 	if config.Square.AccessToken == "" {

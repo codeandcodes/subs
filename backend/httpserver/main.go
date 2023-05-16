@@ -21,6 +21,25 @@ func heartbeat() {
 	}
 }
 
+func enableCORS(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Set headers
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+
+		// If request is OPTIONS then just return with status OK
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		// Next
+		next.ServeHTTP(w, r)
+		return
+	})
+}
+
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -34,6 +53,10 @@ func main() {
 	}
 
 	httpmux := http.NewServeMux()
+
+	// Server swagger json - in a prod app, don't serve this
+	httpmux.Handle("/static/api.swagger.json", enableCORS(http.StripPrefix("/static/", http.FileServer(http.Dir("./static")))))
+
 	httpmux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("Hello, this is the root route!"))
 	})
@@ -44,8 +67,8 @@ func main() {
 
 	// Combine gRPC Gateway routes and HTTP routes on the same server.
 	mux := http.NewServeMux()
-	mux.Handle("/", httpmux)  // non-gRPC routes
-	mux.Handle("/v1/", gwmux) // gRPC routes
+	mux.Handle("/", httpmux)              // non-gRPC routes
+	mux.Handle("/v1/", enableCORS(gwmux)) // gRPC routes
 
 	go heartbeat()
 

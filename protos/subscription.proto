@@ -3,41 +3,30 @@ syntax = "proto3";
 package subs;
 
 import "google/protobuf/timestamp.proto";
+import "common.proto";
+import "api.proto";
 
 option go_package = "github.com/codeandcodes/subs/protos";
 
 /*
-* Basic flow is I create a subscription
+* Basic flow is:
 * 1) Select the payers (I am the payee)
 * 2) Select the frequency
-* 3) This creates the subscription on the backend
-* 4) For each payer, I create a subscription request
-* 5) For each payer, they can accept or reject
-* 6) This will need to map to Square API
-* 7) Payer/payee is a onlysubs concept
+* 3) This creates the Subscription object on the backend
+* 4) For each payer, I create a SubscriptionEventRequest
+* 5) For each payer, they respond with a SubscriptionEventResponse
 */
 message Subscription {
   string id = 1;
 
-  // denomination in USD, no decimals 
-  int32 amount = 2; 
-  string description = 3;
- 
-  // Payer / Payee 
-  // These represent already accepted payer/payee relationships
-  // possible to have multiple payees (e.g. pay me and my brother)
-  repeated User payee = 4;
-  // possible to have multiple payers (1 to many request for payment. e.g. me to all my roommates)
-  repeated User payer = 5;
-
-  // SubscriptionFrequency
-  SubscriptionFrequency subscription_frequency = 6;
+  subs.SubscriptionSetupRequest subscription_setup_request = 2;
 
   enum SubscriptionStatus {
-    ACTIVE = 0;
-    PAUSED = 1;
-    CANCELED = 2;
-    FINISHED = 3;
+    PENDING = 0;
+    ACTIVE = 1;
+    PAUSED = 2;
+    CANCELED = 3;
+    CONCLUDED = 4;
   }
 
   SubscriptionStatus status = 7;
@@ -46,81 +35,28 @@ message Subscription {
 /*
 * SubscriptionRequest and SubscriptionResponse are 1:1 with subscription and user
 */
-message SubscriptionRequest {
+message SubscriptionEventRequest {
   string id = 1;
   string subscription_id = 2;
-  User payer = 3;
-  User payee = 4;
+  subs.User payer = 3;
+  subs.User payee = 4;
   google.protobuf.Timestamp create_time = 5;
   google.protobuf.Timestamp update_time = 6;
 }
 
-message SubscriptionResponse {
+message SubscriptionEventResponse {
   string id = 1;
   string subscription_id = 2;
-  User payer = 3;
-  User payee = 4;
+  subs.User payer = 3;
+  subs.User payee = 4;
   
-  enum SubscriptionResponseType {
+  enum SubscriptionEventResponseType {
     ACCEPT = 0;
     REJECT = 1;
   }
-  SubscriptionResponseType response = 5;
+  SubscriptionEventResponseType response = 5;
 
   string description = 6;
   google.protobuf.Timestamp create_time = 7;
   google.protobuf.Timestamp update_time = 8;
-}
-
-// Adapted from Google schedule
-message SubscriptionFrequency {
-  enum FrequencyType {
-    DAILY = 0;
-    WEEKLY = 1;
-    MONTHLY = 2;
-    YEARLY = 3;
-  }
-
-  FrequencyType type = 1;
-
-  // The interval at which the event recurs. 
-  // For example, if type is WEEKLY and interval is 2, the event occurs every 2 weeks.
-  int32 interval = 2; 
-
-  // The date of the first occurrence
-  string start_date = 3;
-
-  // An optional end date for the recurrence
-  string end_date = 4;
-
-  // An optional maximum number of occurrences. 
-  // If this field is set, the event will stop recurring after this many occurrences.
-  int32 max_occurrences = 5;
-
-  // If the type is MONTHLY or YEARLY, 
-  // this could represent the day of the month that the event should occur
-  int32 day_of_month = 6; 
-
-  // If the type is WEEKLY, 
-  // this could represent the days of the week that the event should occur.
-  repeated DayOfWeek days_of_week = 7; 
-
-  // If true, the event recurs indefinitely.
-  bool is_ongoing = 8;
-}
-
-enum DayOfWeek {
-  SUNDAY = 0;
-  MONDAY = 1;
-  TUESDAY = 2;
-  WEDNESDAY = 3;
-  THURSDAY = 4;
-  FRIDAY = 5;
-  SATURDAY = 6;
-}
-
-
-// User
-message User {
-  string id = 1;
 }

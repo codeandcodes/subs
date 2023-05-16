@@ -1,0 +1,244 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "protos/api.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "SubscriptionService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/getSubscriptions": {
+      "get": {
+        "summary": "Returns a list of subscriptions",
+        "operationId": "SubscriptionService_GetSubscriptions",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/subsGetSubscriptionsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "SubscriptionService"
+        ]
+      }
+    },
+    "/v1/setupSubscription": {
+      "post": {
+        "summary": "Setup a new subscription",
+        "operationId": "SubscriptionService_SetupSubscription",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/subsSubscriptionSetupResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/subsSubscriptionSetupRequest"
+            }
+          }
+        ],
+        "tags": [
+          "SubscriptionService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "SubscriptionFrequencyFrequencyType": {
+      "type": "string",
+      "enum": [
+        "DAILY",
+        "WEEKLY",
+        "MONTHLY",
+        "YEARLY"
+      ],
+      "default": "DAILY"
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "subsDayOfWeek": {
+      "type": "string",
+      "enum": [
+        "SUNDAY",
+        "MONDAY",
+        "TUESDAY",
+        "WEDNESDAY",
+        "THURSDAY",
+        "FRIDAY",
+        "SATURDAY"
+      ],
+      "default": "SUNDAY"
+    },
+    "subsGetSubscriptionsResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "subsSubscriptionFrequency": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "$ref": "#/definitions/SubscriptionFrequencyFrequencyType"
+        },
+        "interval": {
+          "type": "integer",
+          "format": "int32",
+          "description": "The interval at which the event recurs. \nFor example, if type is WEEKLY and interval is 2, the event occurs every 2 weeks."
+        },
+        "startDate": {
+          "type": "string",
+          "title": "The date of the first occurrence"
+        },
+        "endDate": {
+          "type": "string",
+          "title": "An optional end date for the recurrence"
+        },
+        "maxOccurrences": {
+          "type": "integer",
+          "format": "int32",
+          "description": "An optional maximum number of occurrences. \nIf this field is set, the event will stop recurring after this many occurrences."
+        },
+        "dayOfMonth": {
+          "type": "integer",
+          "format": "int32",
+          "title": "If the type is MONTHLY or YEARLY, \nthis could represent the day of the month that the event should occur"
+        },
+        "daysOfWeek": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/subsDayOfWeek"
+          },
+          "description": "If the type is WEEKLY, \nthis could represent the days of the week that the event should occur."
+        },
+        "isOngoing": {
+          "type": "boolean",
+          "description": "If true, the event recurs indefinitely."
+        }
+      },
+      "title": "Adapted from Google schedule"
+    },
+    "subsSubscriptionSetupRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "amount": {
+          "type": "integer",
+          "format": "int32",
+          "title": "denomination in USD, no decimals"
+        },
+        "description": {
+          "type": "string"
+        },
+        "payee": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/subsUser"
+          },
+          "title": "Payer / Payee \nThese represent already accepted payer/payee relationships\npossible to have multiple payees (e.g. pay me and my brother)"
+        },
+        "payer": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/subsUser"
+          },
+          "title": "possible to have multiple payers (1 to many request for payment. e.g. me to all my roommates)"
+        },
+        "subscriptionFrequency": {
+          "$ref": "#/definitions/subsSubscriptionFrequency",
+          "title": "SubscriptionFrequency"
+        }
+      }
+    },
+    "subsSubscriptionSetupResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "subsUser": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "emailAddress": {
+          "type": "string"
+        }
+      },
+      "title": "User\nUser can either be pulled from the database\nOr if only an email address is available, uses that instead\nPreference should be:\n1) ID (stored user in DB, has an account with onlysubs)\n2) email address\n3) Phone number or other contact methods (e.g. in the future)"
+    }
+  }
+}
