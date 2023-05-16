@@ -66,9 +66,13 @@ func main() {
 
 	// Instantiate Services
 	square_client := square.NewAPIClient(cfg)
-	service := &services.SubscriptionService{
+	square_customer_service := &services.SquareCustomerService{
 		Client: square_client,
 	}
+	service := &services.SubscriptionService{
+		Scs: square_customer_service,
+	}
+
 	log.Printf("Square API configuration: %+v\n", cfg)
 
 	// Register services and start server
