@@ -114,7 +114,7 @@ Prerequisites:
   ```
   # from repo root /
   protoc -I . --proto_path=./protos --proto_path=$HOME/workspace/googleapis \
-    --openapiv2_out ./backend/httpserver/static \
+    --openapiv2_out ./backend/httpserver/static/ \
     --openapiv2_opt logtostderr=true \
     protos/api.proto
   ```
