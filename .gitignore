@@ -16,3 +16,4 @@ ios/MyApp.xcodeproj/project.pbxproj
 # Miscellaneous
 .DS_Store
 .env
+backend/grpcserver/config.yaml

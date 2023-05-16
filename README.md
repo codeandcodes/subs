@@ -91,11 +91,11 @@ Prerequisites:
   # Wait a bit
   # Open http://localhost:3200/
   In searchbox, type in
-  http://localhost:3000/static/api.swagger.json
+  http://localhost:3000/static/protos/api.swagger.json
   ```
 
 - [Optional] You can also modify swagger-ui/dev-helpers/dev-helper-initializer.js to automatically load this whenever your run $ npm run dev.
-  - modify the line in dev-helper-initializer.js url to "http://localhost:3000/swagger/api.swagger.json"
+  - modify the line in dev-helper-initializer.js url to "http://localhost:3000/static/protos/api.swagger.json"
 
 
 ### Proto Setup
