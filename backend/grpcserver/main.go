@@ -22,10 +22,6 @@ type Config struct {
 	} `yaml:"square"`
 }
 
-type server struct {
-	pb.UnimplementedSubscriptionServiceServer
-}
-
 const SQUARE_SANDBOX = "https://connect.squareupsandbox.com"
 
 func heartbeat() {

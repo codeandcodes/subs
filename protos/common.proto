@@ -25,6 +25,7 @@ enum DayOfWeek {
 message User {
     string id = 1;
     string email_address = 2;
+    string given_name = 3;
 }
 
 // Adapted from Google schedule

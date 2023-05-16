@@ -24,6 +24,16 @@ service SubscriptionService {
   }
 }
 
+/* This request takes all the inputs necessary
+* to create a subscription setup. 
+* The basic logic is as follows:
+* 1) For each payer, a customer account will be created
+* 2) Then a catalog item representing the payment required will be created
+* 3) Then subscriptions will be created for each customer
+*
+* Failures are aggregated into a map at each phase located in
+* the SubscriptionSetupResponse
+*/
 message SubscriptionSetupRequest {
   string name = 1;
 
@@ -31,11 +41,10 @@ message SubscriptionSetupRequest {
   int32 amount = 2; 
   string description = 3;
  
-  // Payer / Payee 
-  // These represent already accepted payer/payee relationships
-  // possible to have multiple payees (e.g. pay me and my brother)
+  // Payee represents all the persons getting paid by this subscription request. They will be split evenly.
   repeated subs.User payee = 4;
-  // possible to have multiple payers (1 to many request for payment. e.g. me to all my roommates)
+
+  // Payer are the people paying for this subscription. They all pay the same amount (e.g. me to all my roommates)
   repeated subs.User payer = 5;
 
   // SubscriptionFrequency
@@ -44,6 +53,35 @@ message SubscriptionSetupRequest {
 
 message SubscriptionSetupResponse {
   string message = 1;
+  string error = 2;
+
+  // A map of payer IDs to customer creation result from Square API
+  map<string, CustomerCreationResult> customer_creation_results = 3;
+
+  // Represents a single catalog creation result from Square API
+  CatalogCreationResult catalog_creation_result = 4;
+
+  // A map of payer IDs to subscription creation results from Square API
+  map<string, SubscriptionCreationResult> subscription_creation_results = 5;
+}
+
+message CustomerCreationResult {
+  HttpResponse http_response = 1;
+}
+
+message CatalogCreationResult {
+  HttpResponse http_response = 1;
+}
+
+message SubscriptionCreationResult {
+  HttpResponse http_response = 1;
+}
+
+message HttpResponse {
+  string status = 1;
+  string status_code = 2;
+  string error = 3;
+  string message = 4;
 }
 
 message GetSubscriptionRequest {
