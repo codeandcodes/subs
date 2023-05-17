@@ -26,41 +26,36 @@ message User {
     string id = 1;
     string email_address = 2;
     string given_name = 3;
+    string family_name = 4;
 }
 
-// Adapted from Google schedule
+// Maps onto the SubscriptionPhase from Square APIs
 message SubscriptionFrequency {
-    enum FrequencyType {
+    enum Cadence {
       DAILY = 0;
       WEEKLY = 1;
-      MONTHLY = 2;
-      YEARLY = 3;
+      EVERY_TWO_WEEKS = 2;
+      THIRTY_DAYS = 3;
+      SIXTY_DAYS = 4;
+      NINETY_DAYS = 5;
+      MONTHLY = 6;
+      EVERY_TWO_MONTHS = 7;
+      QUARTERLY = 8;
+      EVERY_FOUR_MONTHS = 9;
+      EVERY_SIX_MONTHS = 10;
+      ANNUAL = 11;
+      EVERY_TWO_YEARS = 12;
     }
   
-    FrequencyType type = 1;
-  
-    // The interval at which the event recurs. 
-    // For example, if type is WEEKLY and interval is 2, the event occurs every 2 weeks.
-    int32 interval = 2; 
+    Cadence cadence = 1;
   
     // The date of the first occurrence
-    string start_date = 3;
+    string start_date = 2;
   
-    // An optional end date for the recurrence
-    string end_date = 4;
-  
-    // An optional maximum number of occurrences. 
-    // If this field is set, the event will stop recurring after this many occurrences.
-    int32 max_occurrences = 5;
-  
-    // If the type is MONTHLY or YEARLY, 
-    // this could represent the day of the month that the event should occur
-    int32 day_of_month = 6; 
-  
-    // If the type is WEEKLY, 
-    // this could represent the days of the week that the event should occur.
-    repeated DayOfWeek days_of_week = 7; 
-  
-    // If true, the event recurs indefinitely.
-    bool is_ongoing = 8;
+    // This is the number of periods the subscription is active for. It will start on start date.
+    int32 periods = 3;
+
+    // If is_ongoing is set, then this is a continuous subscription
+    // In the square API, this means that period should be removed
+    bool is_ongoing = 4;
   }

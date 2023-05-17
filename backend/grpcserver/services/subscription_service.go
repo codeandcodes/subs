@@ -30,7 +30,7 @@ func (s *SubscriptionService) SetupSubscription(ctx context.Context, in *pb.Subs
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, fmt.Sprintf("Error in validating input: %v", err))
 	}
-	s.Scs.createCustomers(ctx, in, response)
+	s.Scs.CreateCustomers(ctx, in, response)
 
 	// Step 2: Setup Catalog
 	log.Printf("Got request %v", in)
@@ -43,7 +43,7 @@ func (s *SubscriptionService) SetupSubscription(ctx context.Context, in *pb.Subs
 func (s *SubscriptionService) GetSubscriptions(ctx context.Context, in *pb.GetSubscriptionRequest) (*pb.GetSubscriptionsResponse, error) {
 	// TODO: Add your get subscriptions logic here
 
-	listCustomerResponse, httpResponse, err := s.Scs.listCustomers(ctx)
+	listCustomerResponse, httpResponse, err := s.Scs.ListCustomers(ctx)
 	if err != nil {
 		return &pb.GetSubscriptionsResponse{Message: fmt.Sprintf("Error HTTP %v: %v", httpResponse, err)}, err
 	}

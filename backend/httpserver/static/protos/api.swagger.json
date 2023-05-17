@@ -68,6 +68,7 @@
         "parameters": [
           {
             "name": "body",
+            "description": "Failures are aggregated into a map at each phase located in\nthe SubscriptionSetupResponse",
             "in": "body",
             "required": true,
             "schema": {
@@ -82,13 +83,22 @@
     }
   },
   "definitions": {
-    "SubscriptionFrequencyFrequencyType": {
+    "SubscriptionFrequencyCadence": {
       "type": "string",
       "enum": [
         "DAILY",
         "WEEKLY",
+        "EVERY_TWO_WEEKS",
+        "THIRTY_DAYS",
+        "SIXTY_DAYS",
+        "NINETY_DAYS",
         "MONTHLY",
-        "YEARLY"
+        "EVERY_TWO_MONTHS",
+        "QUARTERLY",
+        "EVERY_FOUR_MONTHS",
+        "EVERY_SIX_MONTHS",
+        "ANNUAL",
+        "EVERY_TWO_YEARS"
       ],
       "default": "DAILY"
     },
@@ -120,18 +130,21 @@
         }
       }
     },
-    "subsDayOfWeek": {
-      "type": "string",
-      "enum": [
-        "SUNDAY",
-        "MONDAY",
-        "TUESDAY",
-        "WEDNESDAY",
-        "THURSDAY",
-        "FRIDAY",
-        "SATURDAY"
-      ],
-      "default": "SUNDAY"
+    "subsCatalogCreationResult": {
+      "type": "object",
+      "properties": {
+        "httpResponse": {
+          "$ref": "#/definitions/subsHttpResponse"
+        }
+      }
+    },
+    "subsCustomerCreationResult": {
+      "type": "object",
+      "properties": {
+        "httpResponse": {
+          "$ref": "#/definitions/subsHttpResponse"
+        }
+      }
     },
     "subsGetSubscriptionsResponse": {
       "type": "object",
@@ -141,48 +154,52 @@
         }
       }
     },
+    "subsHttpResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string"
+        },
+        "statusCode": {
+          "type": "string"
+        },
+        "error": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "subsSubscriptionCreationResult": {
+      "type": "object",
+      "properties": {
+        "httpResponse": {
+          "$ref": "#/definitions/subsHttpResponse"
+        }
+      }
+    },
     "subsSubscriptionFrequency": {
       "type": "object",
       "properties": {
-        "type": {
-          "$ref": "#/definitions/SubscriptionFrequencyFrequencyType"
-        },
-        "interval": {
-          "type": "integer",
-          "format": "int32",
-          "description": "The interval at which the event recurs. \nFor example, if type is WEEKLY and interval is 2, the event occurs every 2 weeks."
+        "cadence": {
+          "$ref": "#/definitions/SubscriptionFrequencyCadence"
         },
         "startDate": {
           "type": "string",
           "title": "The date of the first occurrence"
         },
-        "endDate": {
-          "type": "string",
-          "title": "An optional end date for the recurrence"
-        },
-        "maxOccurrences": {
+        "periods": {
           "type": "integer",
           "format": "int32",
-          "description": "An optional maximum number of occurrences. \nIf this field is set, the event will stop recurring after this many occurrences."
-        },
-        "dayOfMonth": {
-          "type": "integer",
-          "format": "int32",
-          "title": "If the type is MONTHLY or YEARLY, \nthis could represent the day of the month that the event should occur"
-        },
-        "daysOfWeek": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/subsDayOfWeek"
-          },
-          "description": "If the type is WEEKLY, \nthis could represent the days of the week that the event should occur."
+          "description": "This is the number of periods the subscription is active for. It will start on start date."
         },
         "isOngoing": {
           "type": "boolean",
-          "description": "If true, the event recurs indefinitely."
+          "title": "If is_ongoing is set, then this is a continuous subscription\nIn the square API, this means that period should be removed"
         }
       },
-      "title": "Adapted from Google schedule"
+      "title": "Maps onto the SubscriptionPhase from Square APIs"
     },
     "subsSubscriptionSetupRequest": {
       "type": "object",
@@ -204,7 +221,7 @@
             "type": "object",
             "$ref": "#/definitions/subsUser"
           },
-          "title": "Payer / Payee \nThese represent already accepted payer/payee relationships\npossible to have multiple payees (e.g. pay me and my brother)"
+          "description": "Payee represents all the persons getting paid by this subscription request. They will be split evenly."
         },
         "payer": {
           "type": "array",
@@ -212,19 +229,42 @@
             "type": "object",
             "$ref": "#/definitions/subsUser"
           },
-          "title": "possible to have multiple payers (1 to many request for payment. e.g. me to all my roommates)"
+          "title": "Payer are the people paying for this subscription. They all pay the same amount (e.g. me to all my roommates)"
         },
         "subscriptionFrequency": {
           "$ref": "#/definitions/subsSubscriptionFrequency",
           "title": "SubscriptionFrequency"
         }
-      }
+      },
+      "description": "Failures are aggregated into a map at each phase located in\nthe SubscriptionSetupResponse",
+      "title": "This request takes all the inputs necessary\nto create a subscription setup. \nThe basic logic is as follows:\n1) For each payer, a customer account will be created\n2) Then a catalog item representing the payment required will be created\n3) Then subscriptions will be created for each customer"
     },
     "subsSubscriptionSetupResponse": {
       "type": "object",
       "properties": {
         "message": {
           "type": "string"
+        },
+        "error": {
+          "type": "string"
+        },
+        "customerCreationResults": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/subsCustomerCreationResult"
+          },
+          "title": "A map of payer IDs to customer creation result from Square API"
+        },
+        "catalogCreationResult": {
+          "$ref": "#/definitions/subsCatalogCreationResult",
+          "title": "Represents a single catalog creation result from Square API"
+        },
+        "subscriptionCreationResults": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/subsSubscriptionCreationResult"
+          },
+          "title": "A map of payer IDs to subscription creation results from Square API"
         }
       }
     },
@@ -235,6 +275,12 @@
           "type": "string"
         },
         "emailAddress": {
+          "type": "string"
+        },
+        "givenName": {
+          "type": "string"
+        },
+        "familyName": {
           "type": "string"
         }
       },

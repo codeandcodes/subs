@@ -14,9 +14,7 @@ import (
 )
 
 type SquareCustomerService struct {
-	Client          *square.APIClient
-	CreateCustomers func(context.Context, *pb.SubscriptionSetupRequest, *pb.SubscriptionSetupResponse) error
-	ListCustomers   func(context.Context, *pb.SubscriptionSetupRequest, *pb.SubscriptionSetupResponse) (square.ListCustomersResponse, *http.Response, error)
+	Client *square.APIClient
 }
 
 type ValidationError string
@@ -40,7 +38,7 @@ func validatePayers(in *pb.SubscriptionSetupRequest) error {
 * Maps it to a CreateCustomerRequest
 * Calls service and returns result
  */
-func (s *SquareCustomerService) createCustomers(ctx context.Context, in *pb.SubscriptionSetupRequest,
+func (s *SquareCustomerService) CreateCustomers(ctx context.Context, in *pb.SubscriptionSetupRequest,
 	response *pb.SubscriptionSetupResponse) error {
 
 	for _, payer := range in.Payer {
@@ -60,7 +58,6 @@ func (s *SquareCustomerService) createCustomers(ctx context.Context, in *pb.Subs
 			log.Printf("Error marshalling json %v", err)
 		}
 		bodyString = string(bodyBytes)
-		// httpResponse.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 
 		log.Println(bodyString)
 
@@ -82,7 +79,7 @@ func (s *SquareCustomerService) createCustomers(ctx context.Context, in *pb.Subs
 	return nil
 }
 
-func (s *SquareCustomerService) listCustomers(ctx context.Context) (square.ListCustomersResponse, *http.Response, error) {
+func (s *SquareCustomerService) ListCustomers(ctx context.Context) (square.ListCustomersResponse, *http.Response, error) {
 	listCustomerOpts := &square.CustomersApiListCustomersOpts{
 		SortField: optional.NewString("DEFAULT"),
 	}
