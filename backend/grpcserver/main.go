@@ -22,6 +22,12 @@ type Config struct {
 	} `yaml:"square"`
 }
 
+type Credential struct {
+	Square struct {
+		AccessToken string `yaml:"access_token"`
+	} `yaml:"square"`
+}
+
 const SQUARE_SANDBOX = "https://connect.squareupsandbox.com"
 
 func heartbeat() {
@@ -37,11 +43,11 @@ func heartbeat() {
 func main() {
 
 	configPath := flag.String("config", "config.yaml", "path to the config file")
+	credentialPath := flag.String("creds", "credential.yaml", "path to the credential file")
 	flag.Parse()
 
 	// Read config file
 	data, err := os.ReadFile(*configPath)
-
 	if err != nil {
 		log.Fatalf("failed to read config file: %v", err)
 	}
@@ -58,10 +64,23 @@ func main() {
 		log.Printf("Setting basepath to sandbox: %+v\n", SQUARE_SANDBOX)
 		cfg.BasePath = SQUARE_SANDBOX
 	}
-	cfg.AddDefaultHeader("Authorization", fmt.Sprintf("Bearer %s", config.Square.AccessToken))
 
-	if config.Square.AccessToken == "" {
-		log.Fatalf("Square access token is not provided in the config")
+	// Read credential file
+	data, err = os.ReadFile(*credentialPath)
+	if err != nil {
+		log.Fatalf("failed to read credential file: %v", err)
+	}
+
+	// Unmarshal config file into Config struct
+	var credential Credential
+	if err := yaml.Unmarshal(data, &credential); err != nil {
+		log.Fatalf("failed to unmarshal credential file: %v", err)
+	}
+
+	cfg.AddDefaultHeader("Authorization", fmt.Sprintf("Bearer %s", credential.Square.AccessToken))
+
+	if credential.Square.AccessToken == "" {
+		log.Fatalf("Square access token is not provided in the credential file")
 	}
 
 	// Instantiate Services

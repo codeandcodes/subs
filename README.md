@@ -59,7 +59,7 @@ Prerequisites:
   # edit config.yaml
   # add access_token to config.yaml, then
   cd backend/grpcserver
-  go run main.go --config=config.yaml
+  go run main.go --config=config.yaml --creds=credential.yaml
   ```
 
 5. Start a new terminal window/tab. Start the http gateway server (runs on port 3000):
