@@ -13,7 +13,8 @@ import (
 
 type SubscriptionService struct {
 	pb.UnimplementedSubscriptionServiceServer
-	Scs *SquareCustomerService
+	CustomerService *SquareCustomerService
+	CatalogService  *SquareCatalogService
 }
 
 func (s *SubscriptionService) SetupSubscription(ctx context.Context, in *pb.SubscriptionSetupRequest) (*pb.SubscriptionSetupResponse, error) {
@@ -30,10 +31,17 @@ func (s *SubscriptionService) SetupSubscription(ctx context.Context, in *pb.Subs
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, fmt.Sprintf("Error in validating input: %v", err))
 	}
-	s.Scs.CreateCustomers(ctx, in, response)
+	err = s.CustomerService.CreateCustomers(ctx, in, response)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, fmt.Sprintf("Fatal Error in creating customers: %v", err))
+	}
 
 	// Step 2: Setup Catalog
 	log.Printf("Got request %v", in)
+	err = s.CatalogService.CreateSubscriptionPlan(ctx, in, response)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, fmt.Sprintf("Fatal Error in creating catalog object subscription plan: %v", err))
+	}
 
 	// Step 3: For each Customer, create a subscription
 	log.Printf("response: %v", response)
@@ -43,7 +51,7 @@ func (s *SubscriptionService) SetupSubscription(ctx context.Context, in *pb.Subs
 func (s *SubscriptionService) GetSubscriptions(ctx context.Context, in *pb.GetSubscriptionRequest) (*pb.GetSubscriptionsResponse, error) {
 	// TODO: Add your get subscriptions logic here
 
-	listCustomerResponse, httpResponse, err := s.Scs.ListCustomers(ctx)
+	listCustomerResponse, httpResponse, err := s.CustomerService.ListCustomers(ctx)
 	if err != nil {
 		return &pb.GetSubscriptionsResponse{Message: fmt.Sprintf("Error HTTP %v: %v", httpResponse, err)}, err
 	}

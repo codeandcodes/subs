@@ -20,12 +20,12 @@ func (s *SquareCatalogService) CreateSubscriptionPlan(ctx context.Context, in *p
 	// Create Subscription Plan
 	// Single Phase, Subscription Phase based on setup request
 	catalogObjectRequest := square.UpsertCatalogObjectRequest{
-		IdempotencyKey: "<need unique key here>",
+		IdempotencyKey: in.Name,
 		Object: &square.CatalogObject{
 			Type_: string(square.SUBSCRIPTION_PLAN_CatalogObjectType),
-			Id:    "#<need some ID here note hte hashtag>",
+			Id:    fmt.Sprintf("#%v", in.Name),
 			SubscriptionPlanData: &square.CatalogSubscriptionPlan{
-				Name: "<need some name here>",
+				Name: in.Description,
 				Phases: []square.SubscriptionPhase{
 					{
 						Cadence: in.SubscriptionFrequency.Cadence.String(),

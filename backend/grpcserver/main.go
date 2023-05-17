@@ -88,8 +88,12 @@ func main() {
 	square_customer_service := &services.SquareCustomerService{
 		Client: square_client,
 	}
+	square_catalog_service := &services.SquareCatalogService{
+		Client: square_client,
+	}
 	service := &services.SubscriptionService{
-		Scs: square_customer_service,
+		CustomerService: square_customer_service,
+		CatalogService:  square_catalog_service,
 	}
 
 	log.Printf("Square API configuration: %+v\n", cfg)
