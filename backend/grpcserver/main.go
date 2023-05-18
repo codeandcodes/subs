@@ -84,6 +84,7 @@ func main() {
 	}
 
 	// Instantiate Services
+	// Eventually this needs to happen per user request
 	square_client := square.NewAPIClient(cfg)
 	square_customer_service := &services.SquareCustomerService{
 		Client: square_client,

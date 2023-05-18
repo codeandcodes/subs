@@ -18,9 +18,14 @@ type SquareCustomerService struct {
 }
 
 type ValidationError string
+type CustomerCreationError string
 
 func (e ValidationError) Error() string {
 	return fmt.Sprintf("Error in validating data input: %v", string(e))
+}
+
+func (e CustomerCreationError) Error() string {
+	return fmt.Sprintf("Unexpected error in creation of customer: %v", string(e))
 }
 
 func validatePayers(in *pb.SubscriptionSetupRequest) error {
@@ -38,45 +43,103 @@ func validatePayers(in *pb.SubscriptionSetupRequest) error {
 * Maps it to a CreateCustomerRequest
 * Calls service and returns result
  */
-func (s *SquareCustomerService) CreateCustomers(ctx context.Context, in *pb.SubscriptionSetupRequest,
+func (s *SquareCustomerService) SearchOrCreateCustomers(ctx context.Context, in *pb.SubscriptionSetupRequest,
 	response *pb.SubscriptionSetupResponse) error {
 
 	for _, payer := range in.Payer {
-		createCustomerRequest := square.CreateCustomerRequest{
-			IdempotencyKey: payer.Id,
-			EmailAddress:   payer.EmailAddress,
-			GivenName:      payer.GivenName,
+		customer, httpResponse, err := s.SearchOrCreateCustomer(ctx, payer)
+		if err != nil {
+			log.Printf("%v", err)
 		}
-
-		log.Printf("Creating customer request for %v", createCustomerRequest)
-		createCustomerResponse, httpResponse, cErr := s.Client.CustomersApi.CreateCustomer(ctx, createCustomerRequest)
 
 		defer httpResponse.Body.Close()
 		bodyString := fmt.Sprintf("%+v", httpResponse)
-		bodyBytes, err := json.Marshal(bodyString)
-		if err != nil {
+		bodyBytes, marshallErr := json.Marshal(bodyString)
+		if marshallErr != nil {
 			log.Printf("Error marshalling json %v", err)
+			bodyString = string(bodyBytes)
 		}
-		bodyString = string(bodyBytes)
-
-		log.Println(bodyString)
-
-		if cErr != nil {
-			log.Printf("Error occurred while calling CreateCustomer %+v, %+v", createCustomerResponse, cErr)
+		response.CustomerCreationResults[payer.EmailAddress] = &pb.CustomerCreationResult{
+			User: customer,
+			HttpResponse: &pb.HttpResponse{
+				Message:    strings.ToValidUTF8(bodyString, ""),
+				StatusCode: fmt.Sprintf("%v", httpResponse.StatusCode),
+				Error:      strings.ToValidUTF8(fmt.Sprintf("%+v", err), ""),
+			},
 		}
 
-		response.CustomerCreationResults[payer.EmailAddress] =
-			&pb.CustomerCreationResult{
-				HttpResponse: &pb.HttpResponse{
-					Message:    strings.ToValidUTF8(fmt.Sprintf("%+v", createCustomerResponse), ""),
-					Status:     strings.ToValidUTF8(bodyString, ""),
-					StatusCode: fmt.Sprintf("%v", httpResponse.StatusCode),
-					Error:      strings.ToValidUTF8(fmt.Sprintf("%+v", cErr), ""),
-				},
-			}
 	}
 
 	return nil
+}
+
+// Search and retrieve user, or create a user if blank
+func (s *SquareCustomerService) SearchOrCreateCustomer(ctx context.Context, payer *pb.User) (*pb.User, *http.Response, error) {
+	foundUser, httpResponse, err := s.SearchCustomer(ctx, payer.EmailAddress)
+
+	if err != nil {
+		log.Printf("User not found %v", payer.EmailAddress)
+	}
+
+	if foundUser != nil {
+		return mapSquareCustomerToUser(*foundUser), httpResponse, nil
+	}
+
+	createCustomerRequest := square.CreateCustomerRequest{
+		IdempotencyKey: payer.Id,
+		EmailAddress:   payer.EmailAddress,
+		GivenName:      payer.GivenName,
+		FamilyName:     payer.FamilyName,
+	}
+
+	log.Printf("Since user not found, creating customer for %v", payer.EmailAddress)
+	createCustomerResponse, httpResponse, cErr := s.Client.CustomersApi.CreateCustomer(ctx, createCustomerRequest)
+
+	if cErr != nil {
+		return nil, httpResponse, cErr
+	}
+
+	if createCustomerResponse.Customer == nil {
+		return nil, httpResponse, CustomerCreationError(
+			fmt.Sprintf("Unexpected error for %v. Customer in response is nil", createCustomerRequest.IdempotencyKey))
+	}
+
+	return mapSquareCustomerToUser(*createCustomerResponse.Customer), httpResponse, nil
+
+}
+
+// Search for a single customer based on email.
+// First searches, gets ID, then returns square customer directory customer object
+func (s *SquareCustomerService) SearchCustomer(ctx context.Context, email_address string) (*square.Customer, *http.Response, error) {
+	searchResponse, httpResponse, err := s.Client.CustomersApi.SearchCustomers(ctx, square.SearchCustomersRequest{
+		Limit: 1, // TODO: if there are more than 1, something is wrong, we should fix this
+		Query: &square.CustomerQuery{
+			Filter: &square.CustomerFilter{
+				EmailAddress: &square.CustomerTextFilter{
+					Exact: email_address,
+				},
+			},
+		},
+	})
+
+	if err != nil {
+		log.Printf("Error while searching for user %v. %v", email_address, httpResponse)
+		return nil, httpResponse, err
+	}
+
+	if len(searchResponse.Customers) == 0 {
+		return nil, httpResponse, nil
+	}
+
+	retrieveResponse, httpResponse, err := s.Client.CustomersApi.RetrieveCustomer(ctx, searchResponse.Customers[0].Id)
+
+	if err != nil {
+		log.Printf("Error while retrieving user %v. %v", searchResponse.Customers[0].Id, httpResponse)
+		return nil, httpResponse, err
+	}
+
+	return retrieveResponse.Customer, httpResponse, nil
+
 }
 
 func (s *SquareCustomerService) ListCustomers(ctx context.Context) (square.ListCustomersResponse, *http.Response, error) {
@@ -85,4 +148,15 @@ func (s *SquareCustomerService) ListCustomers(ctx context.Context) (square.ListC
 	}
 
 	return s.Client.CustomersApi.ListCustomers(ctx, listCustomerOpts)
+}
+
+func mapSquareCustomerToUser(customer square.Customer) *pb.User {
+	return &pb.User{
+		Id:           customer.Id,
+		EmailAddress: customer.EmailAddress,
+		CreatedAt:    customer.CreatedAt,
+		GivenName:    customer.GivenName,
+		FamilyName:   customer.FamilyName,
+		SquareId:     customer.Id,
+	}
 }

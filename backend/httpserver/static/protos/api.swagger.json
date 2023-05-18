@@ -143,6 +143,9 @@
       "properties": {
         "httpResponse": {
           "$ref": "#/definitions/subsHttpResponse"
+        },
+        "user": {
+          "$ref": "#/definitions/subsUser"
         }
       }
     },
@@ -282,6 +285,18 @@
         },
         "familyName": {
           "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "title": "populated from Square Customer API"
+        },
+        "updatedAt": {
+          "type": "string",
+          "title": "populated from Square Customer API"
+        },
+        "squareId": {
+          "type": "string",
+          "title": "Unique square-assigned ID (not the same as idempotency key)"
         }
       },
       "title": "User\nUser can either be pulled from the database\nOr if only an email address is available, uses that instead\nPreference should be:\n1) ID (stored user in DB, has an account with onlysubs)\n2) email address\n3) Phone number or other contact methods (e.g. in the future)"

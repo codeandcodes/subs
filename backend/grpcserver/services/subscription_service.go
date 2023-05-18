@@ -31,7 +31,7 @@ func (s *SubscriptionService) SetupSubscription(ctx context.Context, in *pb.Subs
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, fmt.Sprintf("Error in validating input: %v", err))
 	}
-	err = s.CustomerService.CreateCustomers(ctx, in, response)
+	err = s.CustomerService.SearchOrCreateCustomers(ctx, in, response)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, fmt.Sprintf("Fatal Error in creating customers: %v", err))
 	}

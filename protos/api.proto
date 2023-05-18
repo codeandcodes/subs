@@ -67,6 +67,7 @@ message SubscriptionSetupResponse {
 
 message CustomerCreationResult {
   HttpResponse http_response = 1;
+  User user = 2;
 }
 
 message CatalogCreationResult {

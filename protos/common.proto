@@ -27,6 +27,15 @@ message User {
     string email_address = 2;
     string given_name = 3;
     string family_name = 4;
+
+    // populated from Square Customer API
+    string created_at = 5;
+    
+    // populated from Square Customer API
+    string updated_at =  6;
+
+    // Unique square-assigned ID (not the same as idempotency key)
+    string square_id = 7;
 }
 
 // Maps onto the SubscriptionPhase from Square APIs
