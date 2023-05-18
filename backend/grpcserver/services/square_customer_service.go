@@ -38,11 +38,8 @@ func validatePayers(in *pb.SubscriptionSetupRequest) error {
 	return nil
 }
 
-/**
-* Takes a SubscriptionSetupRequest
-* Maps it to a CreateCustomerRequest
-* Calls service and returns result
- */
+// Takes a SubscriptionSetupRequest
+// For each payer, will find or create a customer record in Square API
 func (s *SquareCustomerService) SearchOrCreateCustomers(ctx context.Context, in *pb.SubscriptionSetupRequest,
 	response *pb.SubscriptionSetupResponse) error {
 
@@ -142,6 +139,7 @@ func (s *SquareCustomerService) SearchCustomer(ctx context.Context, email_addres
 
 }
 
+// List all customers for a user
 func (s *SquareCustomerService) ListCustomers(ctx context.Context) (square.ListCustomersResponse, *http.Response, error) {
 	listCustomerOpts := &square.CustomersApiListCustomersOpts{
 		SortField: optional.NewString("DEFAULT"),
