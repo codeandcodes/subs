@@ -27,7 +27,7 @@ func (s *SubscriptionService) SetupSubscription(ctx context.Context, in *pb.Subs
 	}
 
 	// Step 1: Create Customers
-	err := validatePayers(in)
+	err := ValidatePayers(in)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, fmt.Sprintf("Error in validating input: %v", err))
 	}

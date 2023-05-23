@@ -27,16 +27,6 @@ func (e CustomerCreationError) Error() string {
 	return fmt.Sprintf("Unexpected error in creation of customer: %v", string(e))
 }
 
-func validatePayers(in *pb.SubscriptionSetupRequest) error {
-	for _, payer := range in.Payer {
-		// validation
-		if payer.Id == "" || payer.EmailAddress == "" {
-			return ValidationError("payer.Id or payer.EmailAddress is empty")
-		}
-	}
-	return nil
-}
-
 // Takes a SubscriptionSetupRequest
 // For each payer, will find or create a customer record in Square API
 func (s *SquareCustomerService) SearchOrCreateCustomers(ctx context.Context, in *pb.SubscriptionSetupRequest,

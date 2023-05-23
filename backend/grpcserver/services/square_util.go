@@ -74,3 +74,13 @@ func CadenceFromString(s string) (pb.SubscriptionFrequency_Cadence, error) {
 		return 0, fmt.Errorf("invalid Cadence string: %s", s)
 	}
 }
+
+func ValidatePayers(in *pb.SubscriptionSetupRequest) error {
+	for _, payer := range in.Payer {
+		// validation
+		if payer.Id == "" || payer.EmailAddress == "" {
+			return ValidationError("payer.Id or payer.EmailAddress is empty")
+		}
+	}
+	return nil
+}
