@@ -90,9 +90,9 @@ func main() {
 	// Server swagger json - in a prod app, don't serve this
 	httpmux.Handle("/static/protos/api.swagger.json", enableCORS(http.StripPrefix("/static/protos", http.FileServer(http.Dir("./static/protos")))))
 
-	httpmux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		_, _ = w.Write([]byte("Hello, this is the root route!"))
-	})
+	fs := http.FileServer(http.Dir("../../frontend"))
+
+	httpmux.HandleFunc("/", fs.ServeHTTP)
 
 	httpmux.HandleFunc("/location", func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("Hello, this is the location route!"))
