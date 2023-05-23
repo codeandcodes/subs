@@ -33,7 +33,7 @@ func (s *SubscriptionService) SetupSubscription(ctx context.Context, in *pb.Subs
 	}
 	err = s.CustomerService.SearchOrCreateCustomers(ctx, in, response)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, fmt.Sprintf("Fatal Error in creating customers: %v", err))
+		return nil, status.Errorf(codes.Internal, fmt.Sprintf("Fatal Error in creating customers: %v", err))
 	}
 
 	// Step 2: Setup Catalog
@@ -50,6 +50,8 @@ func (s *SubscriptionService) SetupSubscription(ctx context.Context, in *pb.Subs
 
 func (s *SubscriptionService) GetSubscriptions(ctx context.Context, in *pb.GetSubscriptionRequest) (*pb.GetSubscriptionsResponse, error) {
 	// TODO: Add your get subscriptions logic here
+
+	s.CatalogService.ListCatalog(ctx)
 
 	listCustomerResponse, httpResponse, err := s.CustomerService.ListCustomers(ctx)
 	if err != nil {

@@ -8,9 +8,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/antihax/optional"
 	pb "github.com/codeandcodes/subs/protos"
-	"github.com/jefflinse/square-connect-go-sdk/square"
+	square "github.com/square/square-connect-go-sdk/swagger"
 )
 
 type SquareCustomerService struct {
@@ -79,7 +78,7 @@ func (s *SquareCustomerService) SearchOrCreateCustomer(ctx context.Context, paye
 	}
 
 	if foundUser != nil {
-		return mapSquareCustomerToUser(*foundUser), httpResponse, nil
+		return MapSquareCustomerToUser(*foundUser), httpResponse, nil
 	}
 
 	createCustomerRequest := square.CreateCustomerRequest{
@@ -101,7 +100,7 @@ func (s *SquareCustomerService) SearchOrCreateCustomer(ctx context.Context, paye
 			fmt.Sprintf("Unexpected error for %v. Customer in response is nil", createCustomerRequest.IdempotencyKey))
 	}
 
-	return mapSquareCustomerToUser(*createCustomerResponse.Customer), httpResponse, nil
+	return MapSquareCustomerToUser(*createCustomerResponse.Customer), httpResponse, nil
 
 }
 
@@ -141,20 +140,7 @@ func (s *SquareCustomerService) SearchCustomer(ctx context.Context, email_addres
 
 // List all customers for a user
 func (s *SquareCustomerService) ListCustomers(ctx context.Context) (square.ListCustomersResponse, *http.Response, error) {
-	listCustomerOpts := &square.CustomersApiListCustomersOpts{
-		SortField: optional.NewString("DEFAULT"),
-	}
+	listCustomerOpts := &square.CustomersApiListCustomersOpts{}
 
 	return s.Client.CustomersApi.ListCustomers(ctx, listCustomerOpts)
-}
-
-func mapSquareCustomerToUser(customer square.Customer) *pb.User {
-	return &pb.User{
-		Id:           customer.Id,
-		EmailAddress: customer.EmailAddress,
-		CreatedAt:    customer.CreatedAt,
-		GivenName:    customer.GivenName,
-		FamilyName:   customer.FamilyName,
-		SquareId:     customer.Id,
-	}
 }

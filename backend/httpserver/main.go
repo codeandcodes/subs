@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"io"
 	"log"
 	"net/http"
 	"time"
@@ -18,6 +20,18 @@ func heartbeat() {
 		seconds += 10
 		log.Printf("Server is running...%d seconds elapsed\n", seconds)
 
+	}
+}
+
+// Middleware
+type Middleware func(http.Handler) http.Handler
+
+func ChainMiddleware(middlewares ...Middleware) Middleware {
+	return func(final http.Handler) http.Handler {
+		for i := len(middlewares) - 1; i >= 0; i-- { // iterate in reverse order
+			final = middlewares[i](final)
+		}
+		return final
 	}
 }
 
@@ -39,6 +53,23 @@ func enableCORS(next http.Handler) http.Handler {
 		return
 	})
 }
+
+func echoMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Echo the request
+		log.Printf("Request method: %s\n", r.Method)
+		log.Printf("Request URL: %s\n", r.URL.String())
+		if r.Body != nil {
+			body, _ := io.ReadAll(r.Body)
+			log.Printf("Request body: %s\n", string(body))
+			r.Body = io.NopCloser(bytes.NewBuffer(body)) // put back the body content
+		}
+		// Then pass the request to the next middleware (or the final handler)
+		next.ServeHTTP(w, r)
+	})
+}
+
+// Main function
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
@@ -68,9 +99,10 @@ func main() {
 	})
 
 	// Combine gRPC Gateway routes and HTTP routes on the same server.
+	allMiddlewares := ChainMiddleware(enableCORS, echoMiddleware)
 	mux := http.NewServeMux()
-	mux.Handle("/", httpmux)              // non-gRPC routes
-	mux.Handle("/v1/", enableCORS(gwmux)) // gRPC routes
+	mux.Handle("/", httpmux)                  // non-gRPC routes
+	mux.Handle("/v1/", allMiddlewares(gwmux)) // gRPC routes
 
 	go heartbeat()
 

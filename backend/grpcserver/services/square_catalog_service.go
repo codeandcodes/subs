@@ -7,32 +7,48 @@ import (
 	"log"
 	"strings"
 
+	"github.com/google/uuid"
+
 	pb "github.com/codeandcodes/subs/protos"
-	"github.com/jefflinse/square-connect-go-sdk/square"
+	square "github.com/square/square-connect-go-sdk/swagger"
 )
 
 type SquareCatalogService struct {
 	Client *square.APIClient
 }
 
+type SquareCatalogError string
+
+func (e SquareCatalogError) Error() string {
+	return fmt.Sprintf("Error in calling Square Catalog API: %v", string(e))
+}
+
 func (s *SquareCatalogService) CreateSubscriptionPlan(ctx context.Context, in *pb.SubscriptionSetupRequest,
 	response *pb.SubscriptionSetupResponse) error {
 	// Create Subscription Plan
 	// Single Phase, Subscription Phase based on setup request
+	uuid, err := uuid.NewRandom()
+	if err != nil {
+		log.Printf("failed to generate UUID: %v", err)
+	}
+
+	currency := square.Currency(square.USD_Currency)
+	subscription_plan := square.CatalogObjectType(square.SUBSCRIPTION_PLAN_CatalogObjectType)
+	cadence := square.SubscriptionCadence(in.SubscriptionFrequency.Cadence.String())
 	catalogObjectRequest := square.UpsertCatalogObjectRequest{
-		IdempotencyKey: in.Name,
+		IdempotencyKey: uuid.String(),
 		Object: &square.CatalogObject{
-			Type_: string(square.SUBSCRIPTION_PLAN_CatalogObjectType),
+			Type_: &subscription_plan,
 			Id:    fmt.Sprintf("#%v", in.Name),
 			SubscriptionPlanData: &square.CatalogSubscriptionPlan{
 				Name: in.Description,
 				Phases: []square.SubscriptionPhase{
 					{
-						Cadence: in.SubscriptionFrequency.Cadence.String(),
+						Cadence: &cadence,
 						Periods: in.SubscriptionFrequency.Periods,
 						RecurringPriceMoney: &square.Money{
 							Amount:   int64(in.Amount),
-							Currency: string(square.USD_Currency),
+							Currency: &currency,
 						},
 					},
 				},
@@ -70,6 +86,9 @@ func (s *SquareCatalogService) CreateSubscriptionPlan(ctx context.Context, in *p
 func (s *SquareCatalogService) ListCatalog(ctx context.Context) error {
 	listCatalogOpts := &square.CatalogApiListCatalogOpts{}
 
-	s.Client.CatalogApi.ListCatalog(ctx, listCatalogOpts)
+	catalogResponse, httpResponse, err := s.Client.CatalogApi.ListCatalog(ctx, listCatalogOpts)
+	log.Printf("Catalog Response: %v", catalogResponse.Objects)
+	log.Printf("HTTP Response: %v", httpResponse)
+	log.Printf("err: %v", err)
 	return nil
 }

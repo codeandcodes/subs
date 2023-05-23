@@ -10,7 +10,7 @@ import (
 
 	"github.com/codeandcodes/subs/backend/grpcserver/services"
 	pb "github.com/codeandcodes/subs/protos"
-	"github.com/jefflinse/square-connect-go-sdk/square"
+	square "github.com/square/square-connect-go-sdk/swagger"
 	"google.golang.org/grpc"
 	"gopkg.in/yaml.v2"
 )
@@ -78,6 +78,7 @@ func main() {
 	}
 
 	cfg.AddDefaultHeader("Authorization", fmt.Sprintf("Bearer %s", credential.Square.AccessToken))
+	cfg.AddDefaultHeader("Square-Version", "2022-09-21") //go sdk is tied to this
 
 	if credential.Square.AccessToken == "" {
 		log.Fatalf("Square access token is not provided in the credential file")
