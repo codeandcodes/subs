@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"strings"
 
 	"github.com/google/uuid"
@@ -83,12 +84,9 @@ func (s *SquareCatalogService) CreateSubscriptionPlan(ctx context.Context, in *p
 	return nil
 }
 
-func (s *SquareCatalogService) ListCatalog(ctx context.Context) error {
+func (s *SquareCatalogService) ListCatalog(ctx context.Context) (square.ListCatalogResponse, *http.Response, error) {
 	listCatalogOpts := &square.CatalogApiListCatalogOpts{}
 
 	catalogResponse, httpResponse, err := s.Client.CatalogApi.ListCatalog(ctx, listCatalogOpts)
-	log.Printf("Catalog Response: %v", catalogResponse.Objects)
-	log.Printf("HTTP Response: %v", httpResponse)
-	log.Printf("err: %v", err)
-	return nil
+	return catalogResponse, httpResponse, err
 }

@@ -48,6 +48,7 @@ message SubscriptionSetupRequest {
   repeated subs.User payer = 5;
 
   // SubscriptionFrequency
+  // This maps to a single phase for now
   subs.SubscriptionFrequency subscription_frequency = 6;
 }
 
@@ -86,9 +87,28 @@ message HttpResponse {
 }
 
 message GetSubscriptionRequest {
-  string user_id = 1;
 }
 
 message GetSubscriptionsResponse {
   string message = 1;
+  string error = 2;
+
+  map<string, SubscriptionCatalogObject> subscriptions = 3;
+}
+
+// Modeled based on Square CatalogObject
+message SubscriptionCatalogObject {
+  string id = 1;
+  string updated_at = 2;
+  subs.SubscriptionPlanData subscription_plan_data = 3;
+}
+
+message SubscriptionPlanData {
+  string name = 1;
+  string id = 2;
+
+  // denomination in USD, no decimals 
+  int32 amount = 3; 
+
+  subs.SubscriptionFrequency subscription_frequency = 4;
 }

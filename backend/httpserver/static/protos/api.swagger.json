@@ -34,14 +34,6 @@
             }
           }
         },
-        "parameters": [
-          {
-            "name": "userId",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
         "tags": [
           "SubscriptionService"
         ]
@@ -154,6 +146,15 @@
       "properties": {
         "message": {
           "type": "string"
+        },
+        "error": {
+          "type": "string"
+        },
+        "subscriptions": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/subsSubscriptionCatalogObject"
+          }
         }
       }
     },
@@ -173,6 +174,21 @@
           "type": "string"
         }
       }
+    },
+    "subsSubscriptionCatalogObject": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "updatedAt": {
+          "type": "string"
+        },
+        "subscriptionPlanData": {
+          "$ref": "#/definitions/subsSubscriptionPlanData"
+        }
+      },
+      "title": "Modeled based on Square CatalogObject"
     },
     "subsSubscriptionCreationResult": {
       "type": "object",
@@ -203,6 +219,25 @@
         }
       },
       "title": "Maps onto the SubscriptionPhase from Square APIs"
+    },
+    "subsSubscriptionPlanData": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "amount": {
+          "type": "integer",
+          "format": "int32",
+          "title": "denomination in USD, no decimals"
+        },
+        "subscriptionFrequency": {
+          "$ref": "#/definitions/subsSubscriptionFrequency"
+        }
+      }
     },
     "subsSubscriptionSetupRequest": {
       "type": "object",
@@ -236,7 +271,7 @@
         },
         "subscriptionFrequency": {
           "$ref": "#/definitions/subsSubscriptionFrequency",
-          "title": "SubscriptionFrequency"
+          "title": "SubscriptionFrequency\nThis maps to a single phase for now"
         }
       },
       "description": "Failures are aggregated into a map at each phase located in\nthe SubscriptionSetupResponse",

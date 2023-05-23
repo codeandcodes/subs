@@ -2,6 +2,7 @@ package services
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 
 	pb "github.com/codeandcodes/subs/protos"
@@ -38,5 +39,38 @@ func MapSquareCustomerToUser(customer square.Customer) *pb.User {
 		GivenName:    customer.GivenName,
 		FamilyName:   customer.FamilyName,
 		SquareId:     customer.Id,
+	}
+}
+
+func CadenceFromString(s string) (pb.SubscriptionFrequency_Cadence, error) {
+	switch s {
+	case "DAILY":
+		return pb.SubscriptionFrequency_DAILY, nil
+	case "WEEKLY":
+		return pb.SubscriptionFrequency_WEEKLY, nil
+	case "EVERY_TWO_WEEKS":
+		return pb.SubscriptionFrequency_EVERY_TWO_WEEKS, nil
+	case "THIRTY_DAYS":
+		return pb.SubscriptionFrequency_THIRTY_DAYS, nil
+	case "SIXTY_DAYS":
+		return pb.SubscriptionFrequency_SIXTY_DAYS, nil
+	case "NINETY_DAYS":
+		return pb.SubscriptionFrequency_NINETY_DAYS, nil
+	case "MONTHLY":
+		return pb.SubscriptionFrequency_MONTHLY, nil
+	case "EVERY_TWO_MONTHS":
+		return pb.SubscriptionFrequency_EVERY_TWO_MONTHS, nil
+	case "QUARTERLY":
+		return pb.SubscriptionFrequency_QUARTERLY, nil
+	case "EVERY_FOUR_MONTHS":
+		return pb.SubscriptionFrequency_EVERY_FOUR_MONTHS, nil
+	case "EVERY_SIX_MONTHS":
+		return pb.SubscriptionFrequency_EVERY_SIX_MONTHS, nil
+	case "ANNUAL":
+		return pb.SubscriptionFrequency_ANNUAL, nil
+	case "EVERY_TWO_YEARS":
+		return pb.SubscriptionFrequency_EVERY_TWO_YEARS, nil
+	default:
+		return 0, fmt.Errorf("invalid Cadence string: %s", s)
 	}
 }

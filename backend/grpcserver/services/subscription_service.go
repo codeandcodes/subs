@@ -49,18 +49,50 @@ func (s *SubscriptionService) SetupSubscription(ctx context.Context, in *pb.Subs
 }
 
 func (s *SubscriptionService) GetSubscriptions(ctx context.Context, in *pb.GetSubscriptionRequest) (*pb.GetSubscriptionsResponse, error) {
-	// TODO: Add your get subscriptions logic here
+	response := &pb.GetSubscriptionsResponse{
+		Subscriptions: make(map[string]*pb.SubscriptionCatalogObject),
+	}
 
-	s.CatalogService.ListCatalog(ctx)
+	listCatalogResponse, _, err := s.CatalogService.ListCatalog(ctx)
 
-	listCustomerResponse, httpResponse, err := s.CustomerService.ListCustomers(ctx)
 	if err != nil {
-		return &pb.GetSubscriptionsResponse{Message: fmt.Sprintf("Error HTTP %v: %v", httpResponse, err)}, err
+		return nil, status.Errorf(codes.NotFound, fmt.Sprintf("Error occurred while retrieving catalog objects: %v", err))
 	}
 
-	for _, v := range listCustomerResponse.Customers {
-		log.Printf("Customer found: %v\n", v)
+	for _, c := range listCatalogResponse.Objects {
+
+		// Phase
+		phase := c.SubscriptionPlanData.Phases[0]
+		var cadence pb.SubscriptionFrequency_Cadence
+		if phase.Cadence != nil {
+			cadence, err = CadenceFromString(fmt.Sprintf("%v", *phase.Cadence))
+			if err != nil {
+				log.Printf("Error converting to cadence enum from Square API: %v", err)
+			}
+		}
+
+		// Convert Money
+		var money int64
+		if phase.RecurringPriceMoney != nil {
+			money = phase.RecurringPriceMoney.Amount
+		}
+
+		response.Subscriptions[c.Id] = &pb.SubscriptionCatalogObject{
+			Id:        c.Id,
+			UpdatedAt: c.UpdatedAt,
+			SubscriptionPlanData: &pb.SubscriptionPlanData{
+				Name:   c.SubscriptionPlanData.Name,
+				Id:     phase.Uid,
+				Amount: int32(money),
+				SubscriptionFrequency: &pb.SubscriptionFrequency{
+					Cadence:   cadence,
+					StartDate: "Tbd",
+					Periods:   phase.Periods,
+					IsOngoing: true,
+				},
+			},
+		}
 	}
 
-	return &pb.GetSubscriptionsResponse{Message: fmt.Sprintf("%v", listCustomerResponse)}, nil
+	return response, nil
 }
