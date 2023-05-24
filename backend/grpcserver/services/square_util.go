@@ -164,3 +164,16 @@ func GetUUID() string {
 	}
 	return uuid.String()
 }
+
+// Return map of plan id: []*pb.Subscription
+func ArrayToMap(list []square.Subscription) map[string][]*pb.Subscription {
+	planMap := make(map[string][]*pb.Subscription)
+	for _, sub := range list {
+		if _, ok := planMap[sub.PlanId]; !ok {
+			planMap[sub.PlanId] = make([]*pb.Subscription, 0)
+		}
+		mapped := MapSquareSubscriptionToSub(sub)
+		planMap[sub.PlanId] = append(planMap[sub.PlanId], mapped)
+	}
+	return planMap
+}

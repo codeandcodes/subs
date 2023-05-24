@@ -38,7 +38,7 @@ func (s *SquareSubscriptionService) CreateSubscriptions(ctx context.Context, in 
 				custId:    cust.GetUser().Id,
 				startDate: in.GetSubscriptionFrequency().StartDate,
 			}
-			res, httpResponse, err := s.CreateSubscription(ctx, &ssr)
+			res, httpResponse, err := s.createSubscription(ctx, &ssr)
 			if err != nil || httpResponse.StatusCode >= 400 {
 				sce := SubscriptionCreationError(fmt.Sprintf("Error creating subscription for plan %v and user %v", ssr.planId, ssr.custId))
 				out.SubscriptionCreationResults[custId] = &pb.SubscriptionCreationResult{
@@ -64,12 +64,18 @@ func (s *SquareSubscriptionService) CreateSubscriptions(ctx context.Context, in 
 }
 
 // Create a single subscription
-func (s *SquareSubscriptionService) CreateSubscription(ctx context.Context, req *SingleSubscriptionRequest) (square.CreateSubscriptionResponse, *http.Response, error) {
+func (s *SquareSubscriptionService) createSubscription(ctx context.Context, req *SingleSubscriptionRequest) (square.CreateSubscriptionResponse, *http.Response, error) {
 	return s.Client.SubscriptionsApi.CreateSubscription(ctx, square.CreateSubscriptionRequest{
 		IdempotencyKey: GetUUID(),
 		PlanId:         req.planId,
 		CustomerId:     req.custId,
 		StartDate:      req.startDate,
 		LocationId:     "L9A9KDM49WV8Y", // this location comes from developer app
+	})
+}
+
+func (s *SquareSubscriptionService) SearchSubscriptions(ctx context.Context) (square.SearchSubscriptionsResponse, *http.Response, error) {
+	return s.Client.SubscriptionsApi.SearchSubscriptions(ctx, square.SearchSubscriptionsRequest{
+		Limit: 1000,
 	})
 }

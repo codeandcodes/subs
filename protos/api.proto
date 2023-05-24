@@ -25,6 +25,8 @@ service SubscriptionService {
   }
 }
 
+// External APIs
+
 /* This request takes all the inputs necessary
 * to create a subscription setup. 
 * The basic logic is as follows:
@@ -67,6 +69,18 @@ message SubscriptionSetupResponse {
   map<string, SubscriptionCreationResult> subscription_creation_results = 5;
 }
 
+message GetSubscriptionRequest {
+}
+
+message GetSubscriptionsResponse {
+  string message = 1;
+  string error = 2;
+
+  map<string, SubscriptionCatalogObject> subscriptions = 3;
+}
+
+// Internal Use
+
 message CustomerCreationResult {
   HttpResponse http_response = 1;
   User user = 2;
@@ -89,21 +103,14 @@ message HttpResponse {
   string message = 4;
 }
 
-message GetSubscriptionRequest {
-}
-
-message GetSubscriptionsResponse {
-  string message = 1;
-  string error = 2;
-
-  map<string, SubscriptionCatalogObject> subscriptions = 3;
-}
-
 // Modeled based on Square CatalogObject
 message SubscriptionCatalogObject {
   string id = 1;
   string updated_at = 2;
   subs.SubscriptionPlanData subscription_plan_data = 3;
+
+  //Optionally can include the list of subscribers/payers as well
+  repeated Subscription subscriptions = 4;
 }
 
 message SubscriptionPlanData {

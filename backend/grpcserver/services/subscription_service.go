@@ -63,8 +63,17 @@ func (s *SubscriptionService) GetSubscriptions(ctx context.Context, in *pb.GetSu
 		return nil, status.Errorf(codes.NotFound, fmt.Sprintf("Error occurred while retrieving catalog objects: %v", err))
 	}
 
+	subscriptionsResponse, _, err := s.SubscriptionService.SearchSubscriptions(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, fmt.Sprintf("Error occurred while retrieving or mapping subscriptions: %v", err))
+	}
+
+	planMap := ArrayToMap(subscriptionsResponse.Subscriptions)
+
 	for _, c := range listCatalogResponse.Objects {
-		response.Subscriptions[c.Id] = MapSquareCatalogObjectToSubscriptionCatalogObject(c)
+		catObject := MapSquareCatalogObjectToSubscriptionCatalogObject(c)
+		catObject.Subscriptions = planMap[c.Id]
+		response.Subscriptions[c.Id] = catObject
 	}
 
 	return response, nil

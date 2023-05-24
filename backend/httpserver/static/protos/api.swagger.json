@@ -225,6 +225,14 @@
         },
         "subscriptionPlanData": {
           "$ref": "#/definitions/subsSubscriptionPlanData"
+        },
+        "subscriptions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/subsSubscription"
+          },
+          "title": "Optionally can include the list of subscribers/payers as well"
         }
       },
       "title": "Modeled based on Square CatalogObject"
