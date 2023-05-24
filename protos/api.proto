@@ -4,6 +4,7 @@ package subs;
 
 import "google/api/annotations.proto";
 import "common.proto";
+import "subscription.proto";
 
 option go_package = "github.com/codeandcodes/subs/protos";
 
@@ -73,10 +74,12 @@ message CustomerCreationResult {
 
 message CatalogCreationResult {
   HttpResponse http_response = 1;
+  SubscriptionCatalogObject subscription_plan = 2;
 }
 
 message SubscriptionCreationResult {
   HttpResponse http_response = 1;
+  Subscription subscription = 2;
 }
 
 message HttpResponse {

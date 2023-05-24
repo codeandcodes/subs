@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/google/uuid"
+
 	pb "github.com/codeandcodes/subs/protos"
 	square "github.com/square/square-connect-go-sdk/swagger"
 )
@@ -39,6 +41,65 @@ func MapSquareCustomerToUser(customer square.Customer) *pb.User {
 		GivenName:    customer.GivenName,
 		FamilyName:   customer.FamilyName,
 		SquareId:     customer.Id,
+	}
+}
+
+func MapSquareSubscriptionToSub(subscription square.Subscription) *pb.Subscription {
+	return &pb.Subscription{
+		Id:                 subscription.Id,
+		PlanId:             subscription.PlanId,
+		CustomerId:         subscription.CustomerId,
+		StartDate:          subscription.StartDate,
+		ChargedThroughDate: subscription.ChargedThroughDate,
+		Status:             string(*subscription.Status),
+		InvoiceIds:         subscription.InvoiceIds,
+		CreatedAt:          subscription.CreatedAt,
+	}
+}
+
+func MapSquareCatalogObjectToSubscriptionCatalogObject(c square.CatalogObject) *pb.SubscriptionCatalogObject {
+	return &pb.SubscriptionCatalogObject{
+		Id:                   c.Id,
+		UpdatedAt:            c.UpdatedAt,
+		SubscriptionPlanData: MapSquareSubscriptionPlanDataToSubscriptionPlanData(*c.SubscriptionPlanData),
+	}
+}
+
+func MapSquareSubscriptionPlanDataToSubscriptionPlanData(plan square.CatalogSubscriptionPlan) *pb.SubscriptionPlanData {
+	if len(plan.Phases) < 1 {
+		log.Printf("Error mapping square subscription plan data. Zero phases.")
+		return nil
+	}
+
+	// Phase
+	phase := plan.Phases[0]
+	if phase.Cadence == nil {
+		log.Printf("Error converting to cadence enum from Square API. Phase cadence was nil")
+		return nil
+	}
+
+	var cadence pb.SubscriptionFrequency_Cadence
+	cadence, err := CadenceFromString(fmt.Sprintf("%v", *phase.Cadence))
+	if err != nil {
+		log.Printf("Error converting to cadence enum from Square API: %v", err)
+	}
+
+	// Convert Money
+	var money int64
+	if phase.RecurringPriceMoney != nil {
+		money = phase.RecurringPriceMoney.Amount
+	}
+
+	return &pb.SubscriptionPlanData{
+		Name:   plan.Name,
+		Id:     phase.Uid,
+		Amount: int32(money),
+		SubscriptionFrequency: &pb.SubscriptionFrequency{
+			Cadence:   cadence,
+			StartDate: "Tbd",
+			Periods:   phase.Periods,
+			IsOngoing: true,
+		},
 	}
 }
 
@@ -83,4 +144,12 @@ func ValidatePayers(in *pb.SubscriptionSetupRequest) error {
 		}
 	}
 	return nil
+}
+
+func GetUUID() string {
+	uuid, err := uuid.NewRandom()
+	if err != nil {
+		log.Printf("failed to generate UUID: %v", err)
+	}
+	return uuid.String()
 }

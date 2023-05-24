@@ -127,6 +127,9 @@
       "properties": {
         "httpResponse": {
           "$ref": "#/definitions/subsHttpResponse"
+        },
+        "subscriptionPlan": {
+          "$ref": "#/definitions/subsSubscriptionCatalogObject"
         }
       }
     },
@@ -175,6 +178,42 @@
         }
       }
     },
+    "subsSubscription": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "planId": {
+          "type": "string"
+        },
+        "customerId": {
+          "type": "string"
+        },
+        "startDate": {
+          "type": "string"
+        },
+        "chargedThroughDate": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "invoiceIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "locationId": {
+          "type": "string"
+        }
+      },
+      "title": "Basic flow is:\n1) Select the payers (I am the payee)\n2) Select the frequency\n3) This creates the Subscription object on the backend\n4) For each payer, I create a SubscriptionEventRequest\n5) For each payer, they respond with a SubscriptionEventResponse"
+    },
     "subsSubscriptionCatalogObject": {
       "type": "object",
       "properties": {
@@ -195,6 +234,9 @@
       "properties": {
         "httpResponse": {
           "$ref": "#/definitions/subsHttpResponse"
+        },
+        "subscription": {
+          "$ref": "#/definitions/subsSubscription"
         }
       }
     },

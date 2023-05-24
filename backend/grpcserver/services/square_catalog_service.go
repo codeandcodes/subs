@@ -8,8 +8,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/google/uuid"
-
 	pb "github.com/codeandcodes/subs/protos"
 	square "github.com/square/square-connect-go-sdk/swagger"
 )
@@ -28,16 +26,12 @@ func (s *SquareCatalogService) CreateSubscriptionPlan(ctx context.Context, in *p
 	response *pb.SubscriptionSetupResponse) error {
 	// Create Subscription Plan
 	// Single Phase, Subscription Phase based on setup request
-	uuid, err := uuid.NewRandom()
-	if err != nil {
-		log.Printf("failed to generate UUID: %v", err)
-	}
 
 	currency := square.Currency(square.USD_Currency)
 	subscription_plan := square.CatalogObjectType(square.SUBSCRIPTION_PLAN_CatalogObjectType)
 	cadence := square.SubscriptionCadence(in.SubscriptionFrequency.Cadence.String())
 	catalogObjectRequest := square.UpsertCatalogObjectRequest{
-		IdempotencyKey: uuid.String(),
+		IdempotencyKey: GetUUID(),
 		Object: &square.CatalogObject{
 			Type_: &subscription_plan,
 			Id:    fmt.Sprintf("#%v", in.Name),
@@ -65,7 +59,7 @@ func (s *SquareCatalogService) CreateSubscriptionPlan(ctx context.Context, in *p
 	}
 	bodyString = string(bodyBytes)
 
-	log.Println(bodyString)
+	// log.Println(bodyString)
 
 	if cErr != nil {
 		log.Printf("Error occurred while calling Square API UpsertCatalogObject %+v, %+v", createCatalogObjectResponse, cErr)
@@ -79,6 +73,7 @@ func (s *SquareCatalogService) CreateSubscriptionPlan(ctx context.Context, in *p
 				StatusCode: fmt.Sprintf("%v", httpResponse.StatusCode),
 				Error:      strings.ToValidUTF8(fmt.Sprintf("%+v", cErr), ""),
 			},
+			SubscriptionPlan: MapSquareCatalogObjectToSubscriptionCatalogObject(*createCatalogObjectResponse.CatalogObject),
 		}
 
 	return nil

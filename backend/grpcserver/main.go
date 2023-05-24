@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/codeandcodes/subs/backend/grpcserver/services"
+
 	pb "github.com/codeandcodes/subs/protos"
 	square "github.com/square/square-connect-go-sdk/swagger"
 	"google.golang.org/grpc"
@@ -93,9 +94,13 @@ func main() {
 	square_catalog_service := &services.SquareCatalogService{
 		Client: square_client,
 	}
+	square_subscription_service := &services.SquareSubscriptionService{
+		Client: square_client,
+	}
 	service := &services.SubscriptionService{
-		CustomerService: square_customer_service,
-		CatalogService:  square_catalog_service,
+		CustomerService:     square_customer_service,
+		CatalogService:      square_catalog_service,
+		SubscriptionService: square_subscription_service,
 	}
 
 	log.Printf("Square API configuration: %+v\n", cfg)

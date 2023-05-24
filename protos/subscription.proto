@@ -4,7 +4,6 @@ package subs;
 
 import "google/protobuf/timestamp.proto";
 import "common.proto";
-import "api.proto";
 
 option go_package = "github.com/codeandcodes/subs/protos";
 
@@ -18,18 +17,14 @@ option go_package = "github.com/codeandcodes/subs/protos";
 */
 message Subscription {
   string id = 1;
-
-  subs.SubscriptionSetupRequest subscription_setup_request = 2;
-
-  enum SubscriptionStatus {
-    PENDING = 0;
-    ACTIVE = 1;
-    PAUSED = 2;
-    CANCELED = 3;
-    CONCLUDED = 4;
-  }
-
-  SubscriptionStatus status = 7;
+  string plan_id = 2;
+  string customer_id = 3;
+  string start_date = 4;
+  string charged_through_date = 5;
+  string status = 6;
+  repeated string invoice_ids = 7;
+  string created_at = 8;
+  string location_id = 9;
 }
 
 /*

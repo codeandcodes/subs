@@ -45,7 +45,7 @@ func (s *SquareCustomerService) SearchOrCreateCustomers(ctx context.Context, in 
 			log.Printf("Error marshalling json %v", err)
 			bodyString = string(bodyBytes)
 		}
-		response.CustomerCreationResults[payer.EmailAddress] = &pb.CustomerCreationResult{
+		response.CustomerCreationResults[payer.Id] = &pb.CustomerCreationResult{
 			User: customer,
 			HttpResponse: &pb.HttpResponse{
 				Message:    strings.ToValidUTF8(bodyString, ""),
@@ -61,8 +61,8 @@ func (s *SquareCustomerService) SearchOrCreateCustomers(ctx context.Context, in 
 
 // Search and retrieve user, or create a user if blank
 func (s *SquareCustomerService) SearchOrCreateCustomer(ctx context.Context, payer *pb.User) (*pb.User, *http.Response, error) {
-	foundUser, httpResponse, err := s.SearchCustomer(ctx, payer.EmailAddress)
 
+	foundUser, httpResponse, err := s.SearchCustomer(ctx, payer.EmailAddress)
 	if err != nil {
 		log.Printf("User not found %v", payer.EmailAddress)
 	}
