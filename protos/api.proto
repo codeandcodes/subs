@@ -26,12 +26,19 @@ service SubscriptionService {
 }
 
 service CustomerService {
-  // Your other rpc definitions...
-  
+  // Returns a customer and subscriptions (optional). 
+  // Can pass in either email or customerId, with customerId given preference
   rpc GetCustomer(GetCustomerRequest) returns (GetCustomerResponse) {
     option (google.api.http) = {
       post: "/v1/getCustomer"
       body: "*"
+    };
+  }
+
+  // Returns a list of all customers.
+  rpc GetCustomers(GetCustomersRequest) returns (GetCustomersResponse) {
+    option (google.api.http) = {
+      get: "/v1/getCustomers"
     };
   }
 }
@@ -110,6 +117,13 @@ message GetCustomerResponse {
 
   // Represents payments to this user from requester
   repeated Subscription payments_to = 3;
+}
+
+message GetCustomersRequest {
+}
+
+message GetCustomersResponse {
+  repeated User users = 1;
 }
 
 // Internal Use

@@ -21,6 +21,7 @@
   "paths": {
     "/v1/getCustomer": {
       "post": {
+        "summary": "Returns a customer and subscriptions (optional). \nCan pass in either email or customerId, with customerId given preference",
         "operationId": "CustomerService_GetCustomer",
         "responses": {
           "200": {
@@ -46,6 +47,29 @@
             }
           }
         ],
+        "tags": [
+          "CustomerService"
+        ]
+      }
+    },
+    "/v1/getCustomers": {
+      "get": {
+        "summary": "Returns a list of all customers.",
+        "operationId": "CustomerService_GetCustomers",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/subsGetCustomersResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
         "tags": [
           "CustomerService"
         ]
@@ -216,6 +240,18 @@
             "$ref": "#/definitions/subsSubscription"
           },
           "title": "Represents payments to this user from requester"
+        }
+      }
+    },
+    "subsGetCustomersResponse": {
+      "type": "object",
+      "properties": {
+        "users": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/subsUser"
+          }
         }
       }
     },

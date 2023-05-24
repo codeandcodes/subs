@@ -4,13 +4,11 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net/http"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	pb "github.com/codeandcodes/subs/protos"
-	square "github.com/square/square-connect-go-sdk/swagger"
 )
 
 type CustomerService struct {
@@ -33,16 +31,20 @@ func (s *CustomerService) GetCustomer(ctx context.Context, in *pb.GetCustomerReq
 	}
 
 	if in.GetCustomerId() != "" {
-		retrieveResponse, _, err := s.CustomerService.GetCustomer(ctx, in.GetCustomerId())
+		retrieveResponse, httpResponse, err := s.CustomerService.GetCustomer(ctx, in.GetCustomerId())
 		if err != nil {
 			return nil, status.Errorf(codes.NotFound, fmt.Sprintf("Error occurred while retrieving customer: %v", err))
+		} else if httpResponse.StatusCode >= 400 {
+			return nil, status.Errorf(codes.Code(httpResponse.StatusCode), "Error: %v", httpResponse.Status)
 		}
 		out.User = MapSquareCustomerToUser(*retrieveResponse.Customer)
 		return out, nil
 	} else if in.GetEmail() != "" {
-		customer, _, err := s.CustomerService.searchCustomer(ctx, in.GetEmail())
+		customer, httpResponse, err := s.CustomerService.searchCustomer(ctx, in.GetEmail())
 		if err != nil {
 			return nil, status.Errorf(codes.NotFound, fmt.Sprintf("Error occurred while retrieving customer: %v", err))
+		} else if httpResponse.StatusCode >= 400 {
+			return nil, status.Errorf(codes.Code(httpResponse.StatusCode), "Error: %v", httpResponse.Status)
 		}
 		out.User = MapSquareCustomerToUser(*customer)
 		return out, nil
@@ -51,6 +53,19 @@ func (s *CustomerService) GetCustomer(ctx context.Context, in *pb.GetCustomerReq
 }
 
 // List all customers for a user
-func (s *CustomerService) ListCustomers(ctx context.Context) (square.ListCustomersResponse, *http.Response, error) {
-	return s.CustomerService.ListCustomers(ctx)
+func (s *CustomerService) GetCustomers(ctx context.Context, in *pb.GetCustomersRequest) (*pb.GetCustomersResponse, error) {
+
+	listCustomersResponse, httpResponse, err := s.CustomerService.ListCustomers(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Error while retreiving list of customers %v", err)
+	} else if httpResponse.StatusCode >= 400 {
+		return nil, status.Errorf(codes.Code(httpResponse.StatusCode), "Error: %v", httpResponse.Status)
+	}
+	payers := make([]*pb.User, 0)
+	for _, v := range listCustomersResponse.Customers {
+		payers = append(payers, MapSquareCustomerToUser(v))
+	}
+	return &pb.GetCustomersResponse{
+		Users: payers,
+	}, nil
 }
