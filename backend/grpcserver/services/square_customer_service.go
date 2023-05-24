@@ -2,11 +2,9 @@ package services
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 
 	pb "github.com/codeandcodes/subs/protos"
 	square "github.com/square/square-connect-go-sdk/swagger"
@@ -33,24 +31,22 @@ func (s *SquareCustomerService) SearchOrCreateCustomers(ctx context.Context, in 
 	response *pb.SubscriptionSetupResponse) error {
 
 	for _, payer := range in.Payer {
-		customer, httpResponse, err := s.SearchOrCreateCustomer(ctx, payer)
-		if err != nil {
-			log.Printf("%v", err)
+		customer, httpResponse, err := s.searchOrCreateCustomer(ctx, payer)
+		if err != nil || httpResponse.StatusCode >= 400 {
+			cce := CustomerCreationError(fmt.Sprintf("Error searching or creating customer: %v", err))
+			response.CustomerCreationResults[payer.Id] = &pb.CustomerCreationResult{
+				User:         nil,
+				HttpResponse: MapErrorAndHttpResponseToResponse(cce, httpResponse),
+			}
 		}
 
-		defer httpResponse.Body.Close()
-		bodyString := fmt.Sprintf("%+v", httpResponse)
-		bodyBytes, marshallErr := json.Marshal(bodyString)
-		if marshallErr != nil {
-			log.Printf("Error marshalling json %v", err)
-			bodyString = string(bodyBytes)
-		}
 		response.CustomerCreationResults[payer.Id] = &pb.CustomerCreationResult{
 			User: customer,
 			HttpResponse: &pb.HttpResponse{
-				Message:    strings.ToValidUTF8(bodyString, ""),
+				Message:    "Successfully created or found customer.",
+				Status:     fmt.Sprintf("%v", httpResponse.Status),
 				StatusCode: fmt.Sprintf("%v", httpResponse.StatusCode),
-				Error:      strings.ToValidUTF8(fmt.Sprintf("%+v", err), ""),
+				Error:      "",
 			},
 		}
 
@@ -60,9 +56,9 @@ func (s *SquareCustomerService) SearchOrCreateCustomers(ctx context.Context, in 
 }
 
 // Search and retrieve user, or create a user if blank
-func (s *SquareCustomerService) SearchOrCreateCustomer(ctx context.Context, payer *pb.User) (*pb.User, *http.Response, error) {
+func (s *SquareCustomerService) searchOrCreateCustomer(ctx context.Context, payer *pb.User) (*pb.User, *http.Response, error) {
 
-	foundUser, httpResponse, err := s.SearchCustomer(ctx, payer.EmailAddress)
+	foundUser, httpResponse, err := s.searchCustomer(ctx, payer.EmailAddress)
 	if err != nil {
 		log.Printf("User not found %v", payer.EmailAddress)
 	}
@@ -96,7 +92,7 @@ func (s *SquareCustomerService) SearchOrCreateCustomer(ctx context.Context, paye
 
 // Search for a single customer based on email.
 // First searches, gets ID, then returns square customer directory customer object
-func (s *SquareCustomerService) SearchCustomer(ctx context.Context, email_address string) (*square.Customer, *http.Response, error) {
+func (s *SquareCustomerService) searchCustomer(ctx context.Context, email_address string) (*square.Customer, *http.Response, error) {
 	searchResponse, httpResponse, err := s.Client.CustomersApi.SearchCustomers(ctx, square.SearchCustomersRequest{
 		Limit: 1, // TODO: if there are more than 1, something is wrong, we should fix this
 		Query: &square.CustomerQuery{
@@ -129,7 +125,7 @@ func (s *SquareCustomerService) SearchCustomer(ctx context.Context, email_addres
 }
 
 // List all customers for a user
-func (s *SquareCustomerService) ListCustomers(ctx context.Context) (square.ListCustomersResponse, *http.Response, error) {
+func (s *SquareCustomerService) listCustomers(ctx context.Context) (square.ListCustomersResponse, *http.Response, error) {
 	listCustomerOpts := &square.CustomersApiListCustomersOpts{}
 
 	return s.Client.CustomersApi.ListCustomers(ctx, listCustomerOpts)

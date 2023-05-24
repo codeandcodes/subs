@@ -2,11 +2,9 @@ package services
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 
 	pb "github.com/codeandcodes/subs/protos"
 	square "github.com/square/square-connect-go-sdk/swagger"
@@ -22,10 +20,10 @@ func (e SquareCatalogError) Error() string {
 	return fmt.Sprintf("Error in calling Square Catalog API: %v", string(e))
 }
 
+// Create Subscription Plan
+// Single Phase, Subscription Phase based on setup request
 func (s *SquareCatalogService) CreateSubscriptionPlan(ctx context.Context, in *pb.SubscriptionSetupRequest,
 	response *pb.SubscriptionSetupResponse) error {
-	// Create Subscription Plan
-	// Single Phase, Subscription Phase based on setup request
 
 	currency := square.Currency(square.USD_Currency)
 	subscription_plan := square.CatalogObjectType(square.SUBSCRIPTION_PLAN_CatalogObjectType)
@@ -50,28 +48,25 @@ func (s *SquareCatalogService) CreateSubscriptionPlan(ctx context.Context, in *p
 			},
 		},
 	}
-	createCatalogObjectResponse, httpResponse, cErr := s.Client.CatalogApi.UpsertCatalogObject(ctx, catalogObjectRequest)
-	defer httpResponse.Body.Close()
-	bodyString := fmt.Sprintf("%+v", httpResponse)
-	bodyBytes, err := json.Marshal(bodyString)
-	if err != nil {
-		log.Printf("Error marshalling json %v", err)
-	}
-	bodyString = string(bodyBytes)
+	createCatalogObjectResponse, httpResponse, err := s.Client.CatalogApi.UpsertCatalogObject(ctx, catalogObjectRequest)
 
-	// log.Println(bodyString)
-
-	if cErr != nil {
-		log.Printf("Error occurred while calling Square API UpsertCatalogObject %+v, %+v", createCatalogObjectResponse, cErr)
+	if err != nil || httpResponse.StatusCode >= 400 {
+		sce := SquareCatalogError(fmt.Sprintf("Error occurred while calling Square API UpsertCatalogObject %+v", err))
+		log.Printf("%v", sce)
+		response.CatalogCreationResult = &pb.CatalogCreationResult{
+			HttpResponse:     MapErrorAndHttpResponseToResponse(sce, httpResponse),
+			SubscriptionPlan: nil,
+		}
+		return sce
 	}
 
 	response.CatalogCreationResult =
 		&pb.CatalogCreationResult{
 			HttpResponse: &pb.HttpResponse{
-				Message:    strings.ToValidUTF8(fmt.Sprintf("%+v", createCatalogObjectResponse), ""),
-				Status:     strings.ToValidUTF8(bodyString, ""),
+				Message:    "Catalog object and subscription plan successfully created.",
+				Status:     fmt.Sprintf("%v", httpResponse.Status),
 				StatusCode: fmt.Sprintf("%v", httpResponse.StatusCode),
-				Error:      strings.ToValidUTF8(fmt.Sprintf("%+v", cErr), ""),
+				Error:      "",
 			},
 			SubscriptionPlan: MapSquareCatalogObjectToSubscriptionCatalogObject(*createCatalogObjectResponse.CatalogObject),
 		}

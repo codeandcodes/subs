@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 
 	"github.com/google/uuid"
 
@@ -54,6 +55,7 @@ func MapSquareSubscriptionToSub(subscription square.Subscription) *pb.Subscripti
 		Status:             string(*subscription.Status),
 		InvoiceIds:         subscription.InvoiceIds,
 		CreatedAt:          subscription.CreatedAt,
+		LocationId:         subscription.LocationId,
 	}
 }
 
@@ -62,6 +64,15 @@ func MapSquareCatalogObjectToSubscriptionCatalogObject(c square.CatalogObject) *
 		Id:                   c.Id,
 		UpdatedAt:            c.UpdatedAt,
 		SubscriptionPlanData: MapSquareSubscriptionPlanDataToSubscriptionPlanData(*c.SubscriptionPlanData),
+	}
+}
+
+func MapErrorAndHttpResponseToResponse(e error, httpResponse *http.Response) *pb.HttpResponse {
+	return &pb.HttpResponse{
+		Message:    "",
+		Status:     fmt.Sprintf("%v", httpResponse.Status),
+		StatusCode: fmt.Sprintf("%v", httpResponse.StatusCode),
+		Error:      e.Error(),
 	}
 }
 
