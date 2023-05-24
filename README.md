@@ -100,6 +100,11 @@ Prerequisites:
 
 ### Proto Setup
 
+0. [Optional] Use script
+  ```
+  ./regenProtos.sh # this just calls the steps below
+  ```
+
 1. Compile protos for backend (in src root dir). Ensure that googleapis references where you cloned the repo.
   ```
   # from repo root /
