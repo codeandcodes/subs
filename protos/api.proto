@@ -25,6 +25,17 @@ service SubscriptionService {
   }
 }
 
+service CustomerService {
+  // Your other rpc definitions...
+  
+  rpc GetCustomer(GetCustomerRequest) returns (GetCustomerResponse) {
+    option (google.api.http) = {
+      post: "/v1/getCustomer"
+      body: "*"
+    };
+  }
+}
+
 // External APIs
 
 /* This request takes all the inputs necessary
@@ -77,6 +88,28 @@ message GetSubscriptionsResponse {
   string error = 2;
 
   map<string, SubscriptionCatalogObject> subscriptions = 3;
+}
+
+message GetCustomerRequest {
+  oneof identifier {
+    string email = 1;
+    string customer_id = 2;
+  }
+
+  // If true, will query subscriptions endpoint and return all subs for this person
+  bool include_subscriptions = 3;
+}
+
+message GetCustomerResponse {
+  // Your response fields here.
+  // For example:
+  User user = 1;
+
+  // Represents payments to the requester
+  repeated Subscription payments_from = 2;
+
+  // Represents payments to this user from requester
+  repeated Subscription payments_to = 3;
 }
 
 // Internal Use

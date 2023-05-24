@@ -97,7 +97,12 @@ func main() {
 	square_subscription_service := &services.SquareSubscriptionService{
 		Client: square_client,
 	}
-	service := &services.SubscriptionService{
+	subscriptionService := &services.SubscriptionService{
+		CustomerService:     square_customer_service,
+		CatalogService:      square_catalog_service,
+		SubscriptionService: square_subscription_service,
+	}
+	customerService := &services.CustomerService{
 		CustomerService:     square_customer_service,
 		CatalogService:      square_catalog_service,
 		SubscriptionService: square_subscription_service,
@@ -111,7 +116,9 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 	s := grpc.NewServer()
-	pb.RegisterSubscriptionServiceServer(s, service)
+	pb.RegisterSubscriptionServiceServer(s, subscriptionService)
+	pb.RegisterCustomerServiceServer(s, customerService)
+
 	log.Println("Server is running on port 50051...")
 
 	go heartbeat()

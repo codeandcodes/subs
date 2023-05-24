@@ -7,6 +7,9 @@
   "tags": [
     {
       "name": "SubscriptionService"
+    },
+    {
+      "name": "CustomerService"
     }
   ],
   "consumes": [
@@ -16,6 +19,38 @@
     "application/json"
   ],
   "paths": {
+    "/v1/getCustomer": {
+      "post": {
+        "operationId": "CustomerService_GetCustomer",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/subsGetCustomerResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/subsGetCustomerRequest"
+            }
+          }
+        ],
+        "tags": [
+          "CustomerService"
+        ]
+      }
+    },
     "/v1/getSubscriptions": {
       "get": {
         "summary": "Returns a list of subscriptions",
@@ -141,6 +176,46 @@
         },
         "user": {
           "$ref": "#/definitions/subsUser"
+        }
+      }
+    },
+    "subsGetCustomerRequest": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "customerId": {
+          "type": "string"
+        },
+        "includeSubscriptions": {
+          "type": "boolean",
+          "title": "If true, will query subscriptions endpoint and return all subs for this person"
+        }
+      }
+    },
+    "subsGetCustomerResponse": {
+      "type": "object",
+      "properties": {
+        "user": {
+          "$ref": "#/definitions/subsUser",
+          "title": "Your response fields here.\nFor example:"
+        },
+        "paymentsFrom": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/subsSubscription"
+          },
+          "title": "Represents payments to the requester"
+        },
+        "paymentsTo": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/subsSubscription"
+          },
+          "title": "Represents payments to this user from requester"
         }
       }
     },

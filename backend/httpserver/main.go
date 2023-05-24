@@ -85,6 +85,11 @@ func main() {
 		log.Fatalf("Failed to register gRPC Gateway: %v", err)
 	}
 
+	err = subspb.RegisterCustomerServiceHandlerFromEndpoint(ctx, gwmux, "localhost:50051", opts)
+	if err != nil {
+		log.Fatalf("Failed to register gRPC Gateway: %v", err)
+	}
+
 	httpmux := http.NewServeMux()
 
 	// Server swagger json - in a prod app, don't serve this

@@ -124,8 +124,13 @@ func (s *SquareCustomerService) searchCustomer(ctx context.Context, email_addres
 
 }
 
+// Retrieves customer by Id
+func (s *SquareCustomerService) GetCustomer(ctx context.Context, id string) (square.RetrieveCustomerResponse, *http.Response, error) {
+	return s.Client.CustomersApi.RetrieveCustomer(ctx, id)
+}
+
 // List all customers for a user
-func (s *SquareCustomerService) listCustomers(ctx context.Context) (square.ListCustomersResponse, *http.Response, error) {
+func (s *SquareCustomerService) ListCustomers(ctx context.Context) (square.ListCustomersResponse, *http.Response, error) {
 	listCustomerOpts := &square.CustomersApiListCustomersOpts{}
 
 	return s.Client.CustomersApi.ListCustomers(ctx, listCustomerOpts)
