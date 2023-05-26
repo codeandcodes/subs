@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
@@ -8,19 +9,26 @@ import (
 	"os"
 	"time"
 
+	"google.golang.org/api/option"
+
 	"github.com/codeandcodes/subs/backend/grpcserver/services"
 
 	pb "github.com/codeandcodes/subs/protos"
 	square "github.com/square/square-connect-go-sdk/swagger"
 	"google.golang.org/grpc"
 	"gopkg.in/yaml.v2"
+
+	firebase "firebase.google.com/go/v4"
 )
 
 type Config struct {
 	Square struct {
 		Environment string `yaml:"environment"`
-		AccessToken string `yaml:"access_token"`
 	} `yaml:"square"`
+	Firebase struct {
+		ProjectId   string `yaml:"project_id"`
+		PathToCreds string `yaml:"path_to_creds"`
+	}
 }
 
 type Credential struct {
@@ -37,8 +45,19 @@ func heartbeat() {
 		time.Sleep(10 * time.Second)
 		seconds += 10
 		log.Printf("Server is running...%d seconds elapsed\n", seconds)
-
 	}
+}
+
+func configureFirebase(cfg Config) (*firebase.App, error) {
+	// Use the application default credentials
+	ctx := context.Background()
+	conf := &firebase.Config{ProjectID: cfg.Firebase.ProjectId}
+	opt := option.WithCredentialsFile(cfg.Firebase.PathToCreds)
+	app, err := firebase.NewApp(ctx, conf, opt)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	return app, err
 }
 
 func main() {
@@ -84,6 +103,31 @@ func main() {
 	if credential.Square.AccessToken == "" {
 		log.Fatalf("Square access token is not provided in the credential file")
 	}
+
+	// Configure Firebase
+	fsApp, err := configureFirebase(config)
+	if err != nil {
+		log.Fatalln("Failed to connect to firestore project. Terminating.")
+	}
+	fsClient, err := fsApp.Firestore(context.Background())
+	if err != nil {
+		log.Fatalln(err)
+	} else {
+		log.Printf("Connected to firestore db: %v", config.Firebase.ProjectId)
+	}
+	defer fsClient.Close()
+
+	// test
+	_, _, err = fsClient.Collection("users").Add(context.Background(), map[string]interface{}{
+		"first": "Ada",
+		"last":  "Lovelace",
+		"born":  1815,
+	})
+	if err != nil {
+		log.Fatalf("Failed adding alovelace: %v", err)
+	}
+
+	//fsClient.Close() //TODO: connect this up with the square_client so it's per user.
 
 	// Instantiate Services
 	// Eventually this needs to happen per user request

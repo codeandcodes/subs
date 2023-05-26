@@ -18,3 +18,4 @@ ios/MyApp.xcodeproj/project.pbxproj
 .env
 backend/curl_examples.txt
 backend/grpcserver/credential.yaml
+backend/grpcserver/*.json
