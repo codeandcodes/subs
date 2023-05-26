@@ -151,6 +151,9 @@ func main() {
 		CatalogService:      square_catalog_service,
 		SubscriptionService: square_subscription_service,
 	}
+	userService := &services.UserService{
+		FsClient: fsClient,
+	}
 
 	log.Printf("Square API configuration: %+v\n", cfg)
 
@@ -162,6 +165,7 @@ func main() {
 	s := grpc.NewServer()
 	pb.RegisterSubscriptionServiceServer(s, subscriptionService)
 	pb.RegisterCustomerServiceServer(s, customerService)
+	pb.RegisterUserServiceServer(s, userService)
 
 	log.Println("Server is running on port 50051...")
 

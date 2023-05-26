@@ -82,12 +82,17 @@ func main() {
 
 	err := subspb.RegisterSubscriptionServiceHandlerFromEndpoint(ctx, gwmux, "localhost:50051", opts)
 	if err != nil {
-		log.Fatalf("Failed to register gRPC Gateway: %v", err)
+		log.Fatalf("Failed to register gRPC Gateway Subscription Service: %v", err)
 	}
 
 	err = subspb.RegisterCustomerServiceHandlerFromEndpoint(ctx, gwmux, "localhost:50051", opts)
 	if err != nil {
-		log.Fatalf("Failed to register gRPC Gateway: %v", err)
+		log.Fatalf("Failed to register gRPC Gateway Customer Service: %v", err)
+	}
+
+	err = subspb.RegisterUserServiceHandlerFromEndpoint(ctx, gwmux, "localhost:50051", opts)
+	if err != nil {
+		log.Fatalf("Failed to register gRPC Gateway User Service: %v", err)
 	}
 
 	httpmux := http.NewServeMux()

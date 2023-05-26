@@ -10,6 +10,9 @@
     },
     {
       "name": "CustomerService"
+    },
+    {
+      "name": "UserService"
     }
   ],
   "consumes": [
@@ -19,6 +22,39 @@
     "application/json"
   ],
   "paths": {
+    "/v1/addSquareAccessToken": {
+      "post": {
+        "summary": "After accessing Square OAuth API, should store access_token for that user\nand associate it with the logged in user.",
+        "operationId": "UserService_AddSquareAccessToken",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/subsAddSquareAccessTokenResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/subsAddSquareAccessTokenRequest"
+            }
+          }
+        ],
+        "tags": [
+          "UserService"
+        ]
+      }
+    },
     "/v1/getCustomer": {
       "post": {
         "summary": "Returns a customer and subscriptions (optional). \nCan pass in either email or customerId, with customerId given preference",
@@ -95,6 +131,39 @@
         },
         "tags": [
           "SubscriptionService"
+        ]
+      }
+    },
+    "/v1/registerUser": {
+      "post": {
+        "summary": "This RPC is used upon registration to onlysubs (e.g. after fb oauth)",
+        "operationId": "UserService_RegisterUser",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/subsRegisterUserResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/subsRegisterUserRequest"
+            }
+          }
+        ],
+        "tags": [
+          "UserService"
         ]
       }
     },
@@ -180,6 +249,18 @@
           }
         }
       }
+    },
+    "subsAddSquareAccessTokenRequest": {
+      "type": "object",
+      "properties": {
+        "squareAccessToken": {
+          "type": "string"
+        }
+      },
+      "title": "should pull current logged in user from an auth cookie"
+    },
+    "subsAddSquareAccessTokenResponse": {
+      "type": "object"
     },
     "subsCatalogCreationResult": {
       "type": "object",
@@ -288,6 +369,22 @@
           "type": "string"
         }
       }
+    },
+    "subsRegisterUserRequest": {
+      "type": "object",
+      "properties": {
+        "emailAddress": {
+          "type": "string",
+          "title": "associate fb email address or contact email"
+        },
+        "userId": {
+          "type": "string",
+          "title": "associate fb user id"
+        }
+      }
+    },
+    "subsRegisterUserResponse": {
+      "type": "object"
     },
     "subsSubscription": {
       "type": "object",

@@ -43,6 +43,25 @@ service CustomerService {
   }
 }
 
+service UserService {
+  // This RPC is used upon registration to onlysubs (e.g. after fb oauth)
+  rpc RegisterUser(RegisterUserRequest) returns (RegisterUserResponse) {
+    option (google.api.http) = {
+      post: "/v1/registerUser"
+      body: "*"
+    };
+  }
+
+  // After accessing Square OAuth API, should store access_token for that user
+  // and associate it with the logged in user.
+  rpc AddSquareAccessToken(AddSquareAccessTokenRequest) returns (AddSquareAccessTokenResponse) {
+    option (google.api.http) = {
+      post: "/v1/addSquareAccessToken"
+      body: "*"
+    };
+  }
+}
+
 // External APIs
 
 /* This request takes all the inputs necessary
@@ -124,6 +143,27 @@ message GetCustomersRequest {
 
 message GetCustomersResponse {
   repeated User users = 1;
+}
+
+message RegisterUserRequest {
+  // associate fb email address or contact email
+  string email_address = 1;
+
+  // associate fb user id 
+  string user_id = 2;
+}
+
+message RegisterUserResponse {
+
+}
+
+// should pull current logged in user from an auth cookie
+message AddSquareAccessTokenRequest {
+  string square_access_token = 1;
+}
+
+message AddSquareAccessTokenResponse {
+
 }
 
 // Internal Use
