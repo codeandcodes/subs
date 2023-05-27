@@ -117,18 +117,6 @@ func main() {
 	}
 	defer fsClient.Close()
 
-	// test
-	_, _, err = fsClient.Collection("users").Add(context.Background(), map[string]interface{}{
-		"first": "Ada",
-		"last":  "Lovelace",
-		"born":  1815,
-	})
-	if err != nil {
-		log.Fatalf("Failed adding alovelace: %v", err)
-	}
-
-	//fsClient.Close() //TODO: connect this up with the square_client so it's per user.
-
 	// Instantiate Services
 	// Eventually this needs to happen per user request
 	square_client := square.NewAPIClient(cfg)

@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"io"
 	"log"
 	"net/http"
@@ -11,6 +12,13 @@ import (
 	subspb "github.com/codeandcodes/subs/protos"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
+
+	"github.com/gorilla/sessions"
+)
+
+var (
+	key   = []byte("super-secret-key")
+	store = sessions.NewCookieStore(key)
 )
 
 func heartbeat() {
@@ -69,6 +77,61 @@ func echoMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+// Authentication
+
+type Credentials struct {
+	UserID              string `json:"user_id"`
+	FacebookAccessToken string `json:"facebook_access_token"`
+	Username            string `json:"username"`
+	Password            string `json:"password"`
+}
+
+func loginUserHandler(w http.ResponseWriter, r *http.Request) {
+	// Parse and decode the request body
+	var creds Credentials
+	err := json.NewDecoder(r.Body).Decode(&creds)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// If the request contains a Facebook access token
+	if creds.FacebookAccessToken != "" {
+		// Call Facebook's API to get the user ID associated with the access token
+		res, err := http.Get("https://graph.facebook.com/me?access_token=" + creds.FacebookAccessToken)
+		if err != nil || res.StatusCode != http.StatusOK {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
+		// Parse the response to get the Facebook user ID
+		var fbResponse struct {
+			ID string `json:"id"`
+		}
+		err = json.NewDecoder(res.Body).Decode(&fbResponse)
+		if err != nil || fbResponse.ID != creds.UserID {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+	} else if creds.Username != "" && creds.Password != "" {
+		// If the request contains a username and password
+		// TODO: authenticate the username and password against your database
+		// If authentication fails, return unauthorized status
+	} else {
+		// If neither authentication method is provided, return a bad request status
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// Create a new session and session cookie
+	session, _ := store.Get(r, "onlysubs_session")
+
+	// Set user as authenticated
+	session.Values["authenticated"] = true
+	session.Values["userID"] = creds.UserID
+	session.Save(r, w)
+}
+
 // Main function
 
 func main() {
@@ -108,9 +171,14 @@ func main() {
 		_, _ = w.Write([]byte("Hello, this is the location route!"))
 	})
 
+	// Register your loginUserHandler
+	// NOTE: Comment this line out to bypass authentication
+	// httpmux.HandleFunc("/loginUser", loginUserHandler)
+
 	// Combine gRPC Gateway routes and HTTP routes on the same server.
 	allMiddlewares := ChainMiddleware(enableCORS, echoMiddleware)
 	mux := http.NewServeMux()
+
 	mux.Handle("/", httpmux)                  // non-gRPC routes
 	mux.Handle("/v1/", allMiddlewares(gwmux)) // gRPC routes
 

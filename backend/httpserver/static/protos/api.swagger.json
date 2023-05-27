@@ -255,12 +255,21 @@
       "properties": {
         "squareAccessToken": {
           "type": "string"
+        },
+        "osUserId": {
+          "type": "string",
+          "title": "TODO: remove this when auth is in place. Only for testing purposes"
         }
       },
       "title": "should pull current logged in user from an auth cookie"
     },
     "subsAddSquareAccessTokenResponse": {
-      "type": "object"
+      "type": "object",
+      "properties": {
+        "httpResponse": {
+          "$ref": "#/definitions/subsHttpResponse"
+        }
+      }
     },
     "subsCatalogCreationResult": {
       "type": "object",
@@ -377,14 +386,31 @@
           "type": "string",
           "title": "associate fb email address or contact email"
         },
-        "userId": {
+        "fbUserId": {
           "type": "string",
           "title": "associate fb user id"
         }
       }
     },
     "subsRegisterUserResponse": {
-      "type": "object"
+      "type": "object",
+      "properties": {
+        "emailAddress": {
+          "type": "string",
+          "title": "associate fb email address or contact email"
+        },
+        "fbUserId": {
+          "type": "string",
+          "title": "associate fb user id"
+        },
+        "osUserId": {
+          "type": "string",
+          "title": "only subs user id"
+        },
+        "httpResponse": {
+          "$ref": "#/definitions/subsHttpResponse"
+        }
+      }
     },
     "subsSubscription": {
       "type": "object",

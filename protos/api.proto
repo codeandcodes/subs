@@ -150,20 +150,32 @@ message RegisterUserRequest {
   string email_address = 1;
 
   // associate fb user id 
-  string user_id = 2;
+  string fb_user_id = 2;
 }
 
 message RegisterUserResponse {
+    // associate fb email address or contact email
+    string email_address = 1;
 
+    // associate fb user id 
+    string fb_user_id = 2;
+
+    // only subs user id
+    string os_user_id = 3;
+
+    HttpResponse http_response = 4;
 }
 
 // should pull current logged in user from an auth cookie
 message AddSquareAccessTokenRequest {
   string square_access_token = 1;
+
+  // TODO: remove this when auth is in place. Only for testing purposes
+  string os_user_id = 2;
 }
 
 message AddSquareAccessTokenResponse {
-
+  HttpResponse http_response = 1;
 }
 
 // Internal Use
