@@ -20,6 +20,8 @@ type FsUser struct {
 	FbUserId          string
 	OsUserId          string
 	SquareAccessToken string
+	DisplayName       string
+	PhotoUrl          string
 }
 
 type UserNotFoundError string
@@ -39,6 +41,8 @@ func (s *UserService) RegisterUser(ctx context.Context, in *pb.RegisterUserReque
 	doc, _, err := s.FsClient.Collection("users").Add(context.Background(), map[string]interface{}{
 		"FbUserId":     in.FbUserId,
 		"EmailAddress": in.EmailAddress,
+		"DisplayName":  in.DisplayName,
+		"PhotoUrl":     in.PhotoUrl,
 	})
 	if err != nil {
 		log.Printf("Failed adding user to firestore: %v", err)

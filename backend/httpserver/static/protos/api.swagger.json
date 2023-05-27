@@ -389,6 +389,14 @@
         "fbUserId": {
           "type": "string",
           "title": "associate fb user id"
+        },
+        "displayName": {
+          "type": "string",
+          "title": "comes from fb"
+        },
+        "photoUrl": {
+          "type": "string",
+          "title": "comes from fb"
         }
       }
     },

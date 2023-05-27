@@ -151,6 +151,12 @@ message RegisterUserRequest {
 
   // associate fb user id 
   string fb_user_id = 2;
+
+  // comes from fb
+  string display_name = 3;
+
+  // comes from fb
+  string photo_url = 4;
 }
 
 message RegisterUserResponse {
