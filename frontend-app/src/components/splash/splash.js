@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { login, logout } from '../../store/session';
+import { login, logout, setCurrentUser } from '../../store/session';
 
 function Splash() {
   const dispatch = useDispatch();
@@ -27,7 +27,7 @@ function Splash() {
         ?
           <div>
             <h1>{user.displayName}</h1>
-            <img src={user.photoURL} />
+            <img src={user.photoUrl} />
             <a href={authorizeUrl}>authorize square</a>
             <button onClick={handleLogout}>Logout</button>
           </div>

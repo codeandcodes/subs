@@ -1,5 +1,6 @@
-import { signInWithPopup, FacebookAuthProvider, getAuth, signOut, onAuthStateChanged } from 'firebase/auth';
+import { signInWithPopup, FacebookAuthProvider, getAuth, signOut } from 'firebase/auth';
 import { authentication } from '../firebase-config';
+import { addSquareAccessToken, registerUser } from '../api/user';
 
 const SET_USER = 'setUser';
 const REMOVE_USER = 'removeUser';
@@ -28,38 +29,49 @@ export const login = () => async (dispatch) => {
   const userCredential = await signInWithFacebook();
 
   const user = {
+    emailAddress: userCredential.user.email,
     displayName: userCredential.user.displayName,
-    photoURL: userCredential.user.photoURL,
-    squareAccessToken: null
+    photoUrl: userCredential.user.photoURL,
+    fbUserId: userCredential.user.uid
   }
+
+  const registeredUser = await registerUser(user);
+
+  user.osUserId = registeredUser.os_user_id;
+
+  localStorage.setItem('user', JSON.stringify(user));
 
   dispatch(setUser(user));
 }
 
-export const logout = async (dispatch) => {
+export const logout = () => async (dispatch) => {
   const auth = getAuth();
 
   signOut(auth).then(() => {
+    localStorage.removeItem('user');
+    
     dispatch(removeUser());
   }).catch((error) => {
     console.log(error.message);
   });
+
 }
 
-export const setUserWithToken = (token) => (dispatch) => {
-  const auth = getAuth();
-  const currentUser = auth.currentUser;
+export const setUserWithToken = (token, osUserId) => async (dispatch) => {
+  const loggedInUser = JSON.parse(localStorage.getItem('user'));
 
-  const user = {
-    displayName: currentUser.displayName,
-    photoURL: currentUser.photoURL,
-    squareAccessToken: token
-  }
+  loggedInUser.squareAccessToken = token;
+  loggedInUser.osUserId = osUserId;
 
-  dispatch(setUser(user));
+  localStorage.setItem('user', JSON.stringify(loggedInUser));
+
+  const addTokenResponse = await addSquareAccessToken(token, osUserId);
+  // handle response
+
+  dispatch(setUser(loggedInUser));
 }
 
-export const setCurrentUser = (user) => dispatch => {
+export const setCurrentUser = (user) => (dispatch) => {  
   dispatch(setUser(user));
 }
 

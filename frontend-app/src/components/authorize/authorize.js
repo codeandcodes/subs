@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { getOauthToken } from '../../api/oauth';
 import { setUserWithToken } from '../../store/session';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
 function Authorize() {
   const dispatch = useDispatch();
@@ -10,6 +10,8 @@ function Authorize() {
   const [authErrors, setAuthErrors] = useState(null);
   const [oauthTokens, setOauthTokens] = useState(null);
   const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem('user'));
+  const osUserId = user.osUserId;
 
   const code = searchParams.get('code');
 
@@ -20,7 +22,7 @@ function Authorize() {
         navigate('/');
       } else {
         setOauthTokens(response);
-        dispatch(setUserWithToken(response.access_token));
+        dispatch(setUserWithToken(response.access_token, osUserId));
         navigate('/feed');
       }
     });
