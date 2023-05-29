@@ -18,9 +18,9 @@ type CustomerService struct {
 	SubscriptionService *SquareSubscriptionService
 }
 
-// The main method responsible for setting up all customers, catalog and subscriptions
+// List customer information for single customer
 func (s *CustomerService) GetCustomer(ctx context.Context, in *pb.GetCustomerRequest) (*pb.GetCustomerResponse, error) {
-	log.Printf("Calling GetCustomer on %v", in)
+	log.Printf("Calling GetCustomer as %v", ctx.Value("UserId"))
 
 	out := &pb.GetCustomerResponse{}
 
@@ -54,6 +54,7 @@ func (s *CustomerService) GetCustomer(ctx context.Context, in *pb.GetCustomerReq
 
 // List all customers for a user
 func (s *CustomerService) GetCustomers(ctx context.Context, in *pb.GetCustomersRequest) (*pb.GetCustomersResponse, error) {
+	log.Printf("Calling GetCustomers as %v", ctx.Value("UserId"))
 
 	listCustomersResponse, httpResponse, err := s.CustomerService.ListCustomers(ctx)
 	if err != nil {

@@ -72,6 +72,8 @@ func (s *UserService) RegisterUser(ctx context.Context, in *pb.RegisterUserReque
 }
 
 func (s *UserService) AddSquareAccessToken(ctx context.Context, in *pb.AddSquareAccessTokenRequest) (*pb.AddSquareAccessTokenResponse, error) {
+	log.Printf("Calling AddSquareAccessToken as %v", ctx.Value("UserId"))
+
 	// TODO: get this from the context instead of directly from the request once auth is in place
 	osUserId := in.OsUserId
 

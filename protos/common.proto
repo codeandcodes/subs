@@ -38,6 +38,7 @@ message User {
     string square_id = 7;
 }
 
+
 // Maps onto the SubscriptionPhase from Square APIs
 message SubscriptionFrequency {
     enum Cadence {
@@ -58,7 +59,7 @@ message SubscriptionFrequency {
   
     Cadence cadence = 1;
   
-    // The date of the first occurrence
+    // The date of the first occurrence `YYYY-MM-DD`-formatted date
     string start_date = 2;
   
     // This is the number of periods the subscription is active for. It will start on start date.

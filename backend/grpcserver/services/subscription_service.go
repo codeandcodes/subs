@@ -20,6 +20,8 @@ type SubscriptionService struct {
 
 // The main method responsible for setting up all customers, catalog and subscriptions
 func (s *SubscriptionService) SetupSubscription(ctx context.Context, in *pb.SubscriptionSetupRequest) (*pb.SubscriptionSetupResponse, error) {
+	log.Printf("Calling SetupSubscription as %v", ctx.Value("UserId"))
+
 	out := &pb.SubscriptionSetupResponse{
 		CustomerCreationResults:     make(map[string]*pb.CustomerCreationResult),
 		CatalogCreationResult:       &pb.CatalogCreationResult{},
@@ -53,6 +55,8 @@ func (s *SubscriptionService) SetupSubscription(ctx context.Context, in *pb.Subs
 
 // Lists subscriptions for the given user
 func (s *SubscriptionService) GetSubscriptions(ctx context.Context, in *pb.GetSubscriptionRequest) (*pb.GetSubscriptionsResponse, error) {
+	log.Printf("Calling GetSubscriptions as %v", ctx.Value("UserId"))
+
 	response := &pb.GetSubscriptionsResponse{
 		Subscriptions: make(map[string]*pb.SubscriptionCatalogObject),
 	}

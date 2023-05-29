@@ -59,8 +59,14 @@ Prerequisites:
   # edit config.yaml
   # add access_token to config.yaml, then
   cd backend/grpcserver
-  go run main.go --config=config.yaml --creds=credential.yaml
+  go run main.go --config=config.yaml --creds=credential.yaml --dev-mode=true
   ```
+
+  [Important!] If you want to test out actual flows using square oauth, you must start the server with --dev-mode=false
+
+  This will enforce authentication and you will need to call /loginUser first, then follow the steps to copy the cookies below *see API Documentation*
+
+  If you are testing from the UI, you should use --dev-mode=false.
 
 5. Start a new terminal window/tab. Start the http gateway server (runs on port 3000):
   ``` 
@@ -82,7 +88,38 @@ Prerequisites:
   # output: Hello, this is the root route!%
   ```
 
-2. [Optional] Swagger UI to browse APIs
+2. If not started in dev mode, you must authenticate
+  ```
+  curl -X 'POST' \
+  'http://localhost:3000/loginUser' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "user_id": "nOToaHZTFXDKn1OVN1Sj",
+    "username": "abcde",
+    "password": "12345"
+  }' -v
+  ```
+
+  What this does is ask your browser to set a cookie that has the encoded session ID. This session ID is used to identify the caller on the GRPC side.
+  You will get a response like this:
+  ```
+  < HTTP/1.1 200 OK
+  < Set-Cookie: onlysubs_session=XXXXTM3MzU2NXxMd3dBTEVoRVRubFdjVlJuUjBGVFJVOHpSMlExWjBkWlJVUjRUWEF3ZVd0NVpHdFhkR3QzUmpSZmRYZFdka0U5fDFMt8bX6e6IYhyiT9hYyDquYUA2f3mu7VZ6j7dwpNgM; Path=/; HttpOnly; Secure; SameSite=Strict
+  ```
+
+3. Try APIs out. Once authentication is enabled, you'll no longer be able to use the Swagger UI in step 4 below. Instead, you can generate the curl command from swagger UI and then paste in an parameter to pass in cookies to curl. E.g. (-b):
+  ```
+  curl -X 'GET' \
+  -b 'onlysubs_session=XXXXXTM3MzU2NXxMd3dBTEVoRVRubFdjVlJuUjBGVFJVOHpSMlExWjBkWlJVUjRUWEF3ZVd0NVpHdFhkR3QzUmpSZmRYZFdka0U5fDFMt8bX6e6IYhyiT9hYyDquYUA2f3mu7VZ6j7dwpNgM' \
+  'http://localhost:3000/v1/getCustomers' \
+  -H 'accept: application/json' -v
+  ```
+
+4. [Optional] Swagger UI to browse APIs
+
+- [MANDATORY] To use Swagger UI, you must ensure that dev-mode is set to true (this is the default)
+
 - clone swagger UI repo
   ```
   git clone https://github.com/swagger-api/swagger-ui.git
@@ -96,7 +133,6 @@ Prerequisites:
 
 - [Optional] You can also modify swagger-ui/dev-helpers/dev-helper-initializer.js to automatically load this whenever your run $ npm run dev.
   - modify the line in dev-helper-initializer.js url to "http://localhost:3000/static/protos/api.swagger.json"
-
 
 ### Proto Setup
 
@@ -164,3 +200,14 @@ set ruby version with rbenv
   bundle install
   cd ios && bundle exec pod install
   ```
+
+If you get errors like
+ ```
+ {
+  "error": "Missing session token",
+  "code": 16,
+  "message": "Missing session token",
+  "details": []
+}
+```
+you probably started the server with --dev-mode=false. To make API calls from the backend, follow the steps above in ### API Documentation 

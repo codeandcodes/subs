@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"time"
 
@@ -16,9 +17,20 @@ import (
 	pb "github.com/codeandcodes/subs/protos"
 	square "github.com/square/square-connect-go-sdk/swagger"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 	"gopkg.in/yaml.v2"
 
+	"cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go/v4"
+
+	"github.com/gorilla/securecookie"
+)
+
+var (
+	cookieName  = "onlysubs_session"
+	cookieStore = securecookie.New([]byte("super-secret-key"), nil)
 )
 
 type Config struct {
@@ -60,10 +72,77 @@ func configureFirebase(cfg Config) (*firebase.App, error) {
 	return app, err
 }
 
+// Authentication
+type FsSession struct {
+	UserId       string
+	CreationTime string
+}
+
+// Returns closure that generates unary inteceptor with context populated
+func CreateUnaryInterceptor(fsClient *firestore.Client) grpc.UnaryServerInterceptor {
+	// UnaryInterceptor now has access to firestore client.
+	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+		md, _ := metadata.FromIncomingContext(ctx)
+		log.Printf("Got metadata %v", md)
+
+		if len(md.Get("grpcgateway-cookie")) == 0 {
+			return nil, status.Error(codes.Unauthenticated, "Missing session token")
+		}
+
+		if cookies := md.Get("grpcgateway-cookie"); len(cookies) > 0 {
+			header := http.Header{}
+			header.Add("Cookie", cookies[0])
+			request := http.Request{Header: header}
+			sessionId, err := getSessionIDFromCookie(&request)
+			//sessionId, err := getSessionIDFromCookie(&request, sessionIdUtil)
+			if err != nil {
+				return nil, status.Error(codes.Unauthenticated, "Error decoding session ID")
+			}
+			// You have your cookie!
+			// Now you can look up the session and check the user's authentication.
+			log.Printf("Decoded sessionID %v from cookie %v", sessionId, cookies)
+
+			dsnap, err := fsClient.Collection("sessions").Doc(sessionId).Get(ctx)
+			if err != nil {
+				return nil, status.Error(codes.Unauthenticated, fmt.Sprintf("Invalid session token %v", sessionId))
+			}
+
+			var fsSession FsSession
+			dsnap.DataTo(&fsSession)
+
+			// Note, could do some validation with CreationTime here
+			ctx = context.WithValue(ctx, "UserId", fsSession.UserId)
+
+			return handler(ctx, req)
+		}
+		return nil, status.Error(codes.Unauthenticated, "Missing session token")
+	}
+}
+
+func getSessionIDFromCookie(r *http.Request) (string, error) {
+	// Retrieve the cookie from the request
+	cookie, err := r.Cookie(cookieName)
+	if err != nil {
+		// Handle error (cookie not found)
+		return "", err
+	}
+
+	// Decode the cookie value (session ID)
+	var sessionID string
+	err = cookieStore.Decode(cookieName, cookie.Value, &sessionID)
+	if err != nil {
+		// Handle error (failed to decode cookie)
+		return "", err
+	}
+
+	return sessionID, nil
+}
+
 func main() {
 
 	configPath := flag.String("config", "config.yaml", "path to the config file")
 	credentialPath := flag.String("creds", "credential.yaml", "path to the credential file")
+	devMode := flag.Bool("dev-mode", true, "start grpc server in dev mode (authentication off)")
 	flag.Parse()
 
 	// Read config file
@@ -150,7 +229,15 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
-	s := grpc.NewServer()
+	var s *grpc.Server
+	if *devMode {
+		log.Printf("Starting grpc server in dev mode (authentication off)")
+		s = grpc.NewServer()
+	} else {
+		log.Printf("Starting grpc server in auth mode (authentication on)")
+		s = grpc.NewServer(grpc.UnaryInterceptor(CreateUnaryInterceptor(fsClient)))
+	}
+
 	pb.RegisterSubscriptionServiceServer(s, subscriptionService)
 	pb.RegisterCustomerServiceServer(s, customerService)
 	pb.RegisterUserServiceServer(s, userService)

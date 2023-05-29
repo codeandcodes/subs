@@ -3,23 +3,53 @@ package main
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
+	"encoding/base64"
 	"encoding/json"
+	"flag"
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"time"
+
+	"gopkg.in/yaml.v2"
+
+	"google.golang.org/api/option"
 
 	subspb "github.com/codeandcodes/subs/protos"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
 
-	"github.com/gorilla/sessions"
+	"cloud.google.com/go/firestore"
+	firebase "firebase.google.com/go/v4"
+
+	"github.com/gorilla/securecookie"
 )
 
 var (
-	key   = []byte("super-secret-key")
-	store = sessions.NewCookieStore(key)
+	cookieName  = "onlysubs_session"
+	cookieStore = securecookie.New([]byte("super-secret-key"), nil)
 )
+
+type Config struct {
+	Firebase struct {
+		ProjectId   string `yaml:"project_id"`
+		PathToCreds string `yaml:"path_to_creds"`
+	}
+}
+
+func configureFirebase(cfg Config) (*firebase.App, error) {
+	// Use the application default credentials
+	ctx := context.Background()
+	conf := &firebase.Config{ProjectID: cfg.Firebase.ProjectId}
+	opt := option.WithCredentialsFile(cfg.Firebase.PathToCreds)
+	app, err := firebase.NewApp(ctx, conf, opt)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	return app, err
+}
 
 func heartbeat() {
 	seconds := 0
@@ -80,61 +110,149 @@ func echoMiddleware(next http.Handler) http.Handler {
 // Authentication
 
 type Credentials struct {
-	UserID              string `json:"user_id"`
+	UserId              string `json:"user_id"`
 	FacebookAccessToken string `json:"facebook_access_token"`
 	Username            string `json:"username"`
 	Password            string `json:"password"`
 }
 
-func loginUserHandler(w http.ResponseWriter, r *http.Request) {
-	// Parse and decode the request body
-	var creds Credentials
-	err := json.NewDecoder(r.Body).Decode(&creds)
+func CreateLoginUserHandler(fsClient *firestore.Client) func(http.ResponseWriter, *http.Request) {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Parse and decode the request body
+		var creds Credentials
+		err := json.NewDecoder(r.Body).Decode(&creds)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		log.Printf("Attempting to login user %v", creds.UserId)
+
+		// If the request contains a Facebook access token
+		if creds.FacebookAccessToken != "" {
+			// Call Facebook's API to get the user ID associated with the access token
+			res, err := http.Get("https://graph.facebook.com/me?access_token=" + creds.FacebookAccessToken)
+			if err != nil || res.StatusCode != http.StatusOK {
+				w.WriteHeader(http.StatusUnauthorized)
+				return
+			}
+
+			// Parse the response to get the Facebook user ID
+			var fbResponse struct {
+				ID string `json:"id"`
+			}
+			err = json.NewDecoder(res.Body).Decode(&fbResponse)
+			if err != nil || fbResponse.ID != creds.UserId {
+				w.WriteHeader(http.StatusUnauthorized)
+				return
+			}
+		} else if creds.Username != "" && creds.Password != "" {
+			log.Printf("Handling username/password authentication for %v", creds.UserId)
+			// If the request contains a username and password
+			// TODO: authenticate the username and password against your database
+			// If authentication fails, return unauthorized status
+		} else {
+			// If neither authentication method is provided, return a bad request status
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		log.Printf("User successfully authenticated %v", creds.UserId)
+		// Create a new session and session cookie
+		sessionID := generateSessionID()
+
+		// Save to DB
+		log.Printf("New session token %v", sessionID)
+		_, err = writeSessionToDb(fsClient, sessionID, creds.UserId)
+		if err != nil {
+			log.Printf("error writing session to db: %v", err)
+			w.WriteHeader(http.StatusBadRequest)
+		} else {
+			log.Printf("Session successfully stored.")
+		}
+
+		// Encode the session ID in a secure cookie
+		encodedSessionID, err := cookieStore.Encode(cookieName, sessionID)
+		if err != nil {
+			// Handle error
+		}
+
+		// Create the cookie
+		cookie := &http.Cookie{
+			Name:     cookieName,
+			Value:    encodedSessionID,
+			Path:     "/",
+			Secure:   true,                    // Enable secure flag (HTTPS)
+			HttpOnly: true,                    // Disallow JavaScript access
+			SameSite: http.SameSiteStrictMode, // Enforce same-site cookies
+		}
+
+		// Set the cookie in the response
+		http.SetCookie(w, cookie)
+
+	}
+}
+
+func generateSessionID() string {
+	randomBytes := make([]byte, 32)
+	if _, err := rand.Read(randomBytes); err != nil {
+		// Handle error
+	}
+	return base64.URLEncoding.EncodeToString(randomBytes)
+}
+
+func writeSessionToDb(fsClient *firestore.Client, sessionKey string, userId string) (*firestore.WriteResult, error) {
+
+	log.Print("session key:", sessionKey)
+	docRef := fsClient.Collection("sessions").Doc(sessionKey)
+
+	writeResult, err := docRef.Set(context.Background(), map[string]interface{}{
+		"UserId":       userId,
+		"CreationTime": time.Now().Format(time.RFC3339),
+	})
+
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
+		return nil, err
 	}
-
-	// If the request contains a Facebook access token
-	if creds.FacebookAccessToken != "" {
-		// Call Facebook's API to get the user ID associated with the access token
-		res, err := http.Get("https://graph.facebook.com/me?access_token=" + creds.FacebookAccessToken)
-		if err != nil || res.StatusCode != http.StatusOK {
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		}
-
-		// Parse the response to get the Facebook user ID
-		var fbResponse struct {
-			ID string `json:"id"`
-		}
-		err = json.NewDecoder(res.Body).Decode(&fbResponse)
-		if err != nil || fbResponse.ID != creds.UserID {
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		}
-	} else if creds.Username != "" && creds.Password != "" {
-		// If the request contains a username and password
-		// TODO: authenticate the username and password against your database
-		// If authentication fails, return unauthorized status
-	} else {
-		// If neither authentication method is provided, return a bad request status
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	// Create a new session and session cookie
-	session, _ := store.Get(r, "onlysubs_session")
-
-	// Set user as authenticated
-	session.Values["authenticated"] = true
-	session.Values["userID"] = creds.UserID
-	session.Save(r, w)
+	return writeResult, nil
 }
 
 // Main function
 
 func main() {
+
+	configPath := flag.String("config", "config.yaml", "path to the config file")
+
+	flag.Parse()
+
+	// Read config file
+	data, err := os.ReadFile(*configPath)
+	if err != nil {
+		log.Fatalf("failed to read config file: %v", err)
+	}
+
+	// Unmarshal config file into Config struct
+	var config Config
+	if err := yaml.Unmarshal(data, &config); err != nil {
+		log.Fatalf("failed to unmarshal config file: %v", err)
+	}
+
+	// Configure Firebase
+	fsApp, err := configureFirebase(config)
+	if err != nil {
+		log.Fatalln("Failed to connect to firestore project. Terminating.")
+	}
+	fsClient, err := fsApp.Firestore(context.Background())
+	if err != nil {
+		log.Fatalln(err)
+	} else {
+		log.Printf("Connected to firestore db: %v", config.Firebase.ProjectId)
+	}
+	defer fsClient.Close()
+
+	// Server code
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -143,7 +261,7 @@ func main() {
 	)
 	opts := []grpc.DialOption{grpc.WithInsecure()}
 
-	err := subspb.RegisterSubscriptionServiceHandlerFromEndpoint(ctx, gwmux, "localhost:50051", opts)
+	err = subspb.RegisterSubscriptionServiceHandlerFromEndpoint(ctx, gwmux, "localhost:50051", opts)
 	if err != nil {
 		log.Fatalf("Failed to register gRPC Gateway Subscription Service: %v", err)
 	}
@@ -173,7 +291,7 @@ func main() {
 
 	// Register your loginUserHandler
 	// NOTE: Comment this line out to bypass authentication
-	// httpmux.HandleFunc("/loginUser", loginUserHandler)
+	httpmux.HandleFunc("/loginUser", CreateLoginUserHandler(fsClient))
 
 	// Combine gRPC Gateway routes and HTTP routes on the same server.
 	allMiddlewares := ChainMiddleware(enableCORS, echoMiddleware)

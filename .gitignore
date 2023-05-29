@@ -19,3 +19,4 @@ ios/MyApp.xcodeproj/project.pbxproj
 backend/curl_examples.txt
 backend/grpcserver/credential.yaml
 backend/grpcserver/*.json
+backend/httpserver/*.json
