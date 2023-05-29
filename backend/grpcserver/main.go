@@ -80,8 +80,12 @@ type FsSession struct {
 
 // Returns closure that generates unary inteceptor with context populated
 func CreateUnaryInterceptor(fsClient *firestore.Client) grpc.UnaryServerInterceptor {
-	// UnaryInterceptor now has access to firestore client.
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+		// Don't enforce auth on RegisterUser endpoint
+		if info.FullMethod == "/subs.UserService/RegisterUser" {
+			return handler(ctx, req)
+		}
+
 		md, _ := metadata.FromIncomingContext(ctx)
 		log.Printf("Got metadata %v", md)
 
