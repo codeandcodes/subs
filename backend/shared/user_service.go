@@ -1,4 +1,4 @@
-package services
+package shared
 
 import (
 	"context"
@@ -49,15 +49,9 @@ func (s *UserService) RegisterUser(ctx context.Context, in *pb.RegisterUserReque
 		return nil, err
 	}
 
-	dsnap, err := doc.Get(ctx)
+	fsUser, err := s.GetUser(ctx, doc.ID)
 	if err != nil {
-		log.Printf("Failure to retrieve doc after adding to firestore: %v", err)
-		return nil, FirestoreError(fmt.Sprintf("%v", err))
-	}
-	var fsUser FsUser
-	dsnap.DataTo(&fsUser)
-	if !dsnap.Exists() {
-		return nil, UserNotFoundError(doc.ID)
+		return nil, err
 	}
 
 	return &pb.RegisterUserResponse{
@@ -75,28 +69,17 @@ func (s *UserService) AddSquareAccessToken(ctx context.Context, in *pb.AddSquare
 	log.Printf("Calling AddSquareAccessToken as %v", ctx.Value("UserId"))
 
 	// TODO: get this from the context instead of directly from the request once auth is in place
-	osUserId := in.OsUserId
+	osUserId := fmt.Sprintf("%v", ctx.Value("UserId"))
 
 	doc := s.FsClient.Collection("users").Doc(osUserId)
-	dsnap, err := s.FsClient.Collection("users").Doc(osUserId).Get(ctx)
-	if err != nil {
-		return nil, FirestoreError(fmt.Sprintf("%v", err))
-	}
 
-	if !dsnap.Exists() {
-		return nil, UserNotFoundError(osUserId)
-	}
-
-	var fsUser FsUser
-	dsnap.DataTo(&fsUser)
-
-	_, err = doc.Set(ctx, map[string]interface{}{
+	_, err := doc.Set(ctx, map[string]interface{}{
 		"SquareAccessToken": in.SquareAccessToken,
 	}, firestore.MergeAll)
 
 	if err != nil {
 		// Handle any errors in an appropriate way, such as returning them.
-		log.Printf("An error has occurred: %s", err)
+		log.Printf("An error has occurred storing square access token: %s", err)
 		return nil, err
 	}
 
@@ -106,4 +89,20 @@ func (s *UserService) AddSquareAccessToken(ctx context.Context, in *pb.AddSquare
 			StatusCode: fmt.Sprintf("%d", http.StatusOK),
 		},
 	}, nil
+}
+
+func (s *UserService) GetUser(ctx context.Context, userId string) (*FsUser, error) {
+
+	dsnap, err := s.FsClient.Collection("users").Doc(userId).Get(ctx)
+	if err != nil {
+		return nil, FirestoreError(fmt.Sprintf("%v", err))
+	}
+
+	if !dsnap.Exists() {
+		return nil, UserNotFoundError(userId)
+	}
+
+	var fsUser FsUser
+	dsnap.DataTo(&fsUser)
+	return &fsUser, nil
 }

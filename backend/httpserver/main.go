@@ -17,6 +17,7 @@ import (
 
 	"google.golang.org/api/option"
 
+	"github.com/codeandcodes/subs/backend/shared"
 	subspb "github.com/codeandcodes/subs/protos"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
@@ -164,18 +165,22 @@ func CreateLoginUserHandler(fsClient *firestore.Client) func(http.ResponseWriter
 
 		// Save to DB
 		log.Printf("New session token %v", sessionID)
-		_, err = writeSessionToDb(fsClient, sessionID, creds.UserId)
+		ss := shared.SessionService{
+			FsClient: fsClient,
+		}
+		_, err = ss.WriteSessionToDb(context.Background(), sessionID, creds.UserId)
 		if err != nil {
-			log.Printf("error writing session to db: %v", err)
+			log.Printf("Error writing session to Db: %v", err)
 			w.WriteHeader(http.StatusBadRequest)
-		} else {
-			log.Printf("Session successfully stored.")
+			return
 		}
 
 		// Encode the session ID in a secure cookie
 		encodedSessionID, err := cookieStore.Encode(cookieName, sessionID)
 		if err != nil {
-			// Handle error
+			log.Printf("Error encoding sessionId to cookie: %v", err)
+			w.WriteHeader(http.StatusBadRequest)
+			return
 		}
 
 		// Create the cookie
@@ -200,22 +205,6 @@ func generateSessionID() string {
 		// Handle error
 	}
 	return base64.URLEncoding.EncodeToString(randomBytes)
-}
-
-func writeSessionToDb(fsClient *firestore.Client, sessionKey string, userId string) (*firestore.WriteResult, error) {
-
-	log.Print("session key:", sessionKey)
-	docRef := fsClient.Collection("sessions").Doc(sessionKey)
-
-	writeResult, err := docRef.Set(context.Background(), map[string]interface{}{
-		"UserId":       userId,
-		"CreationTime": time.Now().Format(time.RFC3339),
-	})
-
-	if err != nil {
-		return nil, err
-	}
-	return writeResult, nil
 }
 
 // Main function

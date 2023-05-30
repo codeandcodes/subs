@@ -14,8 +14,9 @@ import (
 
 	"github.com/codeandcodes/subs/backend/grpcserver/services"
 
+	"github.com/codeandcodes/subs/backend/shared"
 	pb "github.com/codeandcodes/subs/protos"
-	square "github.com/square/square-connect-go-sdk/swagger"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -146,7 +147,6 @@ func main() {
 
 	configPath := flag.String("config", "config.yaml", "path to the config file")
 	credentialPath := flag.String("creds", "credential.yaml", "path to the credential file")
-	devMode := flag.Bool("dev-mode", true, "start grpc server in dev mode (authentication off)")
 	flag.Parse()
 
 	// Read config file
@@ -161,13 +161,6 @@ func main() {
 		log.Fatalf("failed to unmarshal config file: %v", err)
 	}
 
-	// Create Square client with access token from config file
-	cfg := square.NewConfiguration()
-	if config.Square.Environment == "sandbox" {
-		log.Printf("Setting basepath to sandbox: %+v\n", SQUARE_SANDBOX)
-		cfg.BasePath = SQUARE_SANDBOX
-	}
-
 	// Read credential file
 	data, err = os.ReadFile(*credentialPath)
 	if err != nil {
@@ -179,9 +172,6 @@ func main() {
 	if err := yaml.Unmarshal(data, &credential); err != nil {
 		log.Fatalf("failed to unmarshal credential file: %v", err)
 	}
-
-	cfg.AddDefaultHeader("Authorization", fmt.Sprintf("Bearer %s", credential.Square.AccessToken))
-	cfg.AddDefaultHeader("Square-Version", "2022-09-21") //go sdk is tied to this
 
 	if credential.Square.AccessToken == "" {
 		log.Fatalf("Square access token is not provided in the credential file")
@@ -202,31 +192,19 @@ func main() {
 
 	// Instantiate Services
 	// Eventually this needs to happen per user request
-	square_client := square.NewAPIClient(cfg)
-	square_customer_service := &services.SquareCustomerService{
-		Client: square_client,
-	}
-	square_catalog_service := &services.SquareCatalogService{
-		Client: square_client,
-	}
-	square_subscription_service := &services.SquareSubscriptionService{
-		Client: square_client,
-	}
 	subscriptionService := &services.SubscriptionService{
-		CustomerService:     square_customer_service,
-		CatalogService:      square_catalog_service,
-		SubscriptionService: square_subscription_service,
+		ServiceFactory: &services.ServiceFactory{
+			FsClient: fsClient,
+		},
 	}
 	customerService := &services.CustomerService{
-		CustomerService:     square_customer_service,
-		CatalogService:      square_catalog_service,
-		SubscriptionService: square_subscription_service,
+		ServiceFactory: &services.ServiceFactory{
+			FsClient: fsClient,
+		},
 	}
-	userService := &services.UserService{
+	userService := &shared.UserService{
 		FsClient: fsClient,
 	}
-
-	log.Printf("Square API configuration: %+v\n", cfg)
 
 	// Register services and start server
 	lis, err := net.Listen("tcp", ":50051")
@@ -234,13 +212,9 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 	var s *grpc.Server
-	if *devMode {
-		log.Printf("Starting grpc server in dev mode (authentication off)")
-		s = grpc.NewServer()
-	} else {
-		log.Printf("Starting grpc server in auth mode (authentication on)")
-		s = grpc.NewServer(grpc.UnaryInterceptor(CreateUnaryInterceptor(fsClient)))
-	}
+
+	log.Printf("Starting grpc server in auth mode (authentication on)")
+	s = grpc.NewServer(grpc.UnaryInterceptor(CreateUnaryInterceptor(fsClient)))
 
 	pb.RegisterSubscriptionServiceServer(s, subscriptionService)
 	pb.RegisterCustomerServiceServer(s, customerService)

@@ -272,7 +272,7 @@ type SubscriptionFrequency struct {
 	unknownFields protoimpl.UnknownFields
 
 	Cadence SubscriptionFrequency_Cadence `protobuf:"varint,1,opt,name=cadence,proto3,enum=subs.SubscriptionFrequency_Cadence" json:"cadence,omitempty"`
-	// The date of the first occurrence
+	// The date of the first occurrence `YYYY-MM-DD`-formatted date
 	StartDate string `protobuf:"bytes,2,opt,name=start_date,json=startDate,proto3" json:"start_date,omitempty"`
 	// This is the number of periods the subscription is active for. It will start on start date.
 	Periods int32 `protobuf:"varint,3,opt,name=periods,proto3" json:"periods,omitempty"`

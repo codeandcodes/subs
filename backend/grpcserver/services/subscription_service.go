@@ -13,14 +13,30 @@ import (
 
 type SubscriptionService struct {
 	pb.UnimplementedSubscriptionServiceServer
-	CustomerService     *SquareCustomerService
-	CatalogService      *SquareCatalogService
-	SubscriptionService *SquareSubscriptionService
+	ServiceFactory *ServiceFactory
 }
 
 // The main method responsible for setting up all customers, catalog and subscriptions
 func (s *SubscriptionService) SetupSubscription(ctx context.Context, in *pb.SubscriptionSetupRequest) (*pb.SubscriptionSetupResponse, error) {
 	log.Printf("Calling SetupSubscription as %v", ctx.Value("UserId"))
+
+	// Instantiate services and validate clients
+	custService, err := s.ServiceFactory.NewSquareCustomerService(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	catService, err := s.ServiceFactory.NewSquareCatalogService(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	subService, err := s.ServiceFactory.NewSquareSubscriptionService(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Call Square services
 
 	out := &pb.SubscriptionSetupResponse{
 		CustomerCreationResults:     make(map[string]*pb.CustomerCreationResult),
@@ -29,24 +45,24 @@ func (s *SubscriptionService) SetupSubscription(ctx context.Context, in *pb.Subs
 	}
 
 	// Step 1: Create Customers
-	err := ValidatePayers(in)
+	err = ValidatePayers(in)
 	if err != nil {
 		return out, status.Errorf(codes.InvalidArgument, fmt.Sprintf("Error in validating input: %v", err))
 	}
-	err = s.CustomerService.SearchOrCreateCustomers(ctx, in, out)
+	err = custService.SearchOrCreateCustomers(ctx, in, out)
 	if err != nil {
 		return out, status.Errorf(codes.Internal, fmt.Sprintf("Fatal Error in creating customers: %v", err))
 	}
 
 	// Step 2: Setup Catalog
 	log.Printf("Got request %v", in)
-	err = s.CatalogService.CreateSubscriptionPlan(ctx, in, out)
+	err = catService.CreateSubscriptionPlan(ctx, in, out)
 	if err != nil {
 		return out, status.Errorf(codes.InvalidArgument, fmt.Sprintf("Fatal Error in creating catalog object subscription plan: %v", err))
 	}
 
 	// Step 3: For each Customer, create a subscription
-	err = s.SubscriptionService.CreateSubscriptions(ctx, in, out)
+	err = subService.CreateSubscriptions(ctx, in, out)
 	if err != nil {
 		return out, status.Errorf(codes.InvalidArgument, fmt.Sprintf("Fatal Error in creating subscriptions: %v", err))
 	}
@@ -57,17 +73,28 @@ func (s *SubscriptionService) SetupSubscription(ctx context.Context, in *pb.Subs
 func (s *SubscriptionService) GetSubscriptions(ctx context.Context, in *pb.GetSubscriptionRequest) (*pb.GetSubscriptionsResponse, error) {
 	log.Printf("Calling GetSubscriptions as %v", ctx.Value("UserId"))
 
+	// Instantiate services and validate clients
+	catService, err := s.ServiceFactory.NewSquareCatalogService(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	subService, err := s.ServiceFactory.NewSquareSubscriptionService(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	response := &pb.GetSubscriptionsResponse{
 		Subscriptions: make(map[string]*pb.SubscriptionCatalogObject),
 	}
 
-	listCatalogResponse, _, err := s.CatalogService.ListCatalog(ctx)
+	listCatalogResponse, _, err := catService.ListCatalog(ctx)
 
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, fmt.Sprintf("Error occurred while retrieving catalog objects: %v", err))
 	}
 
-	subscriptionsResponse, _, err := s.SubscriptionService.SearchSubscriptions(ctx)
+	subscriptionsResponse, _, err := subService.SearchSubscriptions(ctx)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, fmt.Sprintf("Error occurred while retrieving or mapping subscriptions: %v", err))
 	}

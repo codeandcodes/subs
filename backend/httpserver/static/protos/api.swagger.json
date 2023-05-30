@@ -255,10 +255,6 @@
       "properties": {
         "squareAccessToken": {
           "type": "string"
-        },
-        "osUserId": {
-          "type": "string",
-          "title": "TODO: remove this when auth is in place. Only for testing purposes"
         }
       },
       "title": "should pull current logged in user from an auth cookie"
@@ -498,7 +494,7 @@
         },
         "startDate": {
           "type": "string",
-          "title": "The date of the first occurrence"
+          "title": "The date of the first occurrence `YYYY-MM-DD`-formatted date"
         },
         "periods": {
           "type": "integer",

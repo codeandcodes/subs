@@ -59,14 +59,8 @@ Prerequisites:
   # edit config.yaml
   # add access_token to config.yaml, then
   cd backend/grpcserver
-  go run main.go --config=config.yaml --creds=credential.yaml --dev-mode=true
+  go run main.go --config=config.yaml
   ```
-
-  [Important!] If you want to test out actual flows using square oauth, you must start the server with --dev-mode=false
-
-  This will enforce authentication and you will need to call /loginUser first, then follow the steps to copy the cookies below *see API Documentation*
-
-  If you are testing from the UI, you should use --dev-mode=false.
 
 5. Start a new terminal window/tab. Start the http gateway server (runs on port 3000):
   ``` 
@@ -88,7 +82,7 @@ Prerequisites:
   # output: Hello, this is the root route!%
   ```
 
-2. If not started in dev mode, you must authenticate
+2. Note: you must authenticate to onlysubs
   ```
   curl -X 'POST' \
   'http://localhost:3000/loginUser' \
@@ -108,7 +102,23 @@ Prerequisites:
   < Set-Cookie: onlysubs_session=XXXXTM3MzU2NXxMd3dBTEVoRVRubFdjVlJuUjBGVFJVOHpSMlExWjBkWlJVUjRUWEF3ZVd0NVpHdFhkR3QzUmpSZmRYZFdka0U5fDFMt8bX6e6IYhyiT9hYyDquYUA2f3mu7VZ6j7dwpNgM; Path=/; HttpOnly; Secure; SameSite=Strict
   ```
 
-3. Try APIs out. Once authentication is enabled, you'll no longer be able to use the Swagger UI in step 4 below. Instead, you can generate the curl command from swagger UI and then paste in an parameter to pass in cookies to curl. E.g. (-b):
+  You then must copy and paste this cookie into all subsequent curl commands. If you do not, you will get an unauthorized error back from the server while making requests. See below. 
+
+3. Enable square oauth to store the access token. 
+
+You must go through the square oauth flow to get the square access token. This needs to then be called with /v1/addSquareAccessToken, otherwise you won't be able to call any square APIs.
+  ```
+  curl -X 'POST' \
+    'http://localhost:3000/v1/addSquareAccessToken' \
+    -b 'onlysubs_session=XXXXXTM3MzU2NXxMd3dBTEVoRVRubFdjVlJuUjBGVFJVOHpSMlExWjBkWlJVUjRUWEF3ZVd0NVpHdFhkR3QzUmpSZmRYZFdka0U5fDFMt8bX6e6IYhyiT9hYyDquYUA2f3mu7VZ6j7dwpNgM' \
+    -H 'accept: application/json' \
+    -H 'Content-Type: application/json' \
+    -d '{
+    "squareAccessToken": "string"
+  }'
+  ```
+
+4. Try APIs out via curl. You can generate the curl command from swagger UI (see below) and then paste in an parameter to pass in cookies to curl. E.g. (-b):
   ```
   curl -X 'GET' \
   -b 'onlysubs_session=XXXXXTM3MzU2NXxMd3dBTEVoRVRubFdjVlJuUjBGVFJVOHpSMlExWjBkWlJVUjRUWEF3ZVd0NVpHdFhkR3QzUmpSZmRYZFdka0U5fDFMt8bX6e6IYhyiT9hYyDquYUA2f3mu7VZ6j7dwpNgM' \
@@ -116,9 +126,9 @@ Prerequisites:
   -H 'accept: application/json' -v
   ```
 
-4. [Optional] Swagger UI to browse APIs
+5. [Optional] Swagger UI to browse APIs
 
-- [MANDATORY] To use Swagger UI, you must ensure that dev-mode is set to true (this is the default)
+- [MANDATORY] Note, you can't use the **"try-it-out"** function in swagger UI because swagger UI does not support cookies. The suggested method is clicking try-it-out, then modifying the payload, copying into a curl command and adding the cookie manually.
 
 - clone swagger UI repo
   ```
@@ -186,7 +196,7 @@ Prerequisites:
 
 ## Troubleshooting
 
-If you see "Unknown ruby interpreter version (do not know how to handle): >=2.6.10." make sure you update ruby
+1. If you see "Unknown ruby interpreter version (do not know how to handle): >=2.6.10." make sure you update ruby
 
 set ruby version with rbenv
   ``` 
@@ -201,6 +211,8 @@ set ruby version with rbenv
   cd ios && bundle exec pod install
   ```
 
+2. Missing session tokens. 
+
 If you get errors like
  ```
  {
@@ -210,4 +222,10 @@ If you get errors like
   "details": []
 }
 ```
-you probably started the server with --dev-mode=false. To make API calls from the backend, follow the steps above in ### API Documentation 
+you probably haven't authenticated and/or copied the cookie into your curl command.
+To make API calls from the backend, follow the steps above in ### API Documentation 
+
+3. Missing square access token.
+
+If you see ```User %v has no associated square access token. Cannot call square services.``` 
+then you probably haven't associated your square access token. Go through square oauth to get an access token, then store it via the /v1/addSquareAccessToken or directly in the db.

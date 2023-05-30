@@ -1,7 +1,3 @@
-# Square config
-square:
-  environment: sandbox
-
 firebase:
   project_id: onlysubs-82006
   path_to_creds: onlysubs-82006-service-credentials.json

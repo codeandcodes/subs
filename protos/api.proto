@@ -175,9 +175,6 @@ message RegisterUserResponse {
 // should pull current logged in user from an auth cookie
 message AddSquareAccessTokenRequest {
   string square_access_token = 1;
-
-  // TODO: remove this when auth is in place. Only for testing purposes
-  string os_user_id = 2;
 }
 
 message AddSquareAccessTokenResponse {

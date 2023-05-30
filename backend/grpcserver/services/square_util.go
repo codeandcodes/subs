@@ -177,3 +177,13 @@ func ArrayToMap(list []square.Subscription) map[string][]*pb.Subscription {
 	}
 	return planMap
 }
+
+func NewSquareClient(squareAccessToken string) *square.APIClient {
+	cfg := square.NewConfiguration()
+	cfg.BasePath = "https://connect.squareupsandbox.com"
+	cfg.AddDefaultHeader("Authorization", fmt.Sprintf("Bearer %s", squareAccessToken))
+	cfg.AddDefaultHeader("Square-Version", "2022-09-21") //go sdk is tied to this
+
+	square_client := square.NewAPIClient(cfg)
+	return square_client
+}

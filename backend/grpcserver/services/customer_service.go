@@ -13,14 +13,20 @@ import (
 
 type CustomerService struct {
 	pb.UnimplementedCustomerServiceServer
-	CustomerService     *SquareCustomerService
-	CatalogService      *SquareCatalogService
-	SubscriptionService *SquareSubscriptionService
+	ServiceFactory *ServiceFactory
 }
 
 // List customer information for single customer
 func (s *CustomerService) GetCustomer(ctx context.Context, in *pb.GetCustomerRequest) (*pb.GetCustomerResponse, error) {
 	log.Printf("Calling GetCustomer as %v", ctx.Value("UserId"))
+
+	// Instantiate services and validate clients
+	cs, err := s.ServiceFactory.NewSquareCustomerService(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Call Square services
 
 	out := &pb.GetCustomerResponse{}
 
@@ -31,7 +37,7 @@ func (s *CustomerService) GetCustomer(ctx context.Context, in *pb.GetCustomerReq
 	}
 
 	if in.GetCustomerId() != "" {
-		retrieveResponse, httpResponse, err := s.CustomerService.GetCustomer(ctx, in.GetCustomerId())
+		retrieveResponse, httpResponse, err := cs.GetCustomer(ctx, in.GetCustomerId())
 		if err != nil {
 			return nil, status.Errorf(codes.NotFound, fmt.Sprintf("Error occurred while retrieving customer: %v", err))
 		} else if httpResponse.StatusCode >= 400 {
@@ -40,7 +46,7 @@ func (s *CustomerService) GetCustomer(ctx context.Context, in *pb.GetCustomerReq
 		out.User = MapSquareCustomerToUser(*retrieveResponse.Customer)
 		return out, nil
 	} else if in.GetEmail() != "" {
-		customer, httpResponse, err := s.CustomerService.searchCustomer(ctx, in.GetEmail())
+		customer, httpResponse, err := cs.searchCustomer(ctx, in.GetEmail())
 		if err != nil {
 			return nil, status.Errorf(codes.NotFound, fmt.Sprintf("Error occurred while retrieving customer: %v", err))
 		} else if httpResponse.StatusCode >= 400 {
@@ -56,7 +62,14 @@ func (s *CustomerService) GetCustomer(ctx context.Context, in *pb.GetCustomerReq
 func (s *CustomerService) GetCustomers(ctx context.Context, in *pb.GetCustomersRequest) (*pb.GetCustomersResponse, error) {
 	log.Printf("Calling GetCustomers as %v", ctx.Value("UserId"))
 
-	listCustomersResponse, httpResponse, err := s.CustomerService.ListCustomers(ctx)
+	// Instantiate services and validate clients
+	cs, err := s.ServiceFactory.NewSquareCustomerService(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Call Square services
+	listCustomersResponse, httpResponse, err := cs.ListCustomers(ctx)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Error while retreiving list of customers %v", err)
 	} else if httpResponse.StatusCode >= 400 {
