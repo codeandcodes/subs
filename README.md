@@ -170,6 +170,13 @@ You must go through the square oauth flow to get the square access token. This n
     protos/api.proto
   ```
 
+### Frontend Setup
+1. Add `.env` to `/frontend-app` and `firebase-config.js` to `frontend-app/src`
+
+2. in `/frontend-app` run `npm install` (first time only)
+
+3. To serve: `npm start`. Note that we are serving on `localhost:4000` (port is defined in .env file) since the http server is `localhost:3000`
+
 ### React Native Setup
 
 1. Open a new terminal window.
