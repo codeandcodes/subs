@@ -146,7 +146,12 @@ func (s *UserService) GetUser(ctx context.Context, in *pb.GetUserRequest) (*pb.G
 		var fsUser FsUser
 		dsnaps[0].DataTo(&fsUser)
 		return &pb.GetUserResponse{
-			OsUserId: dsnaps[0].Ref.ID,
+			OsUserId:             dsnaps[0].Ref.ID,
+			EmailAddress:         fsUser.EmailAddress,
+			FbUserId:             fsUser.FbUserId,
+			DisplayName:          fsUser.DisplayName,
+			PhotoUrl:             fsUser.PhotoUrl,
+			HasSquareAccessToken: fsUser.SquareAccessToken != "",
 		}, nil
 
 	// more than one user found

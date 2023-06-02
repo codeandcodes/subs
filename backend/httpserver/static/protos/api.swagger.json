@@ -136,7 +136,7 @@
     },
     "/v1/getUser": {
       "get": {
-        "summary": "Gets a user based on an email address",
+        "summary": "Gets a os user based on an email address",
         "operationId": "UserService_GetUser",
         "responses": {
           "200": {
@@ -394,6 +394,21 @@
       "properties": {
         "osUserId": {
           "type": "string"
+        },
+        "emailAddress": {
+          "type": "string"
+        },
+        "fbUserId": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "photoUrl": {
+          "type": "string"
+        },
+        "hasSquareAccessToken": {
+          "type": "boolean"
         }
       }
     },

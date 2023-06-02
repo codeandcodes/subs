@@ -52,7 +52,7 @@ service UserService {
     };
   }
 
-  // Gets a user based on an email address
+  // Gets a os user based on an email address
   rpc GetUser(GetUserRequest) returns (GetUserResponse) {
     option (google.api.http) = {
       get: "/v1/getUser"
@@ -185,6 +185,16 @@ message GetUserRequest {
 
 message GetUserResponse {
   string os_user_id = 1;
+
+  string email_address = 2;
+
+  string fb_user_id = 3;
+
+  string display_name = 4;
+
+  string photo_url = 5;
+
+  bool has_square_access_token = 6;
 }
 
 // should pull current logged in user from an auth cookie

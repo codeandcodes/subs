@@ -294,7 +294,7 @@ const (
 type UserServiceClient interface {
 	// This RPC is used upon registration to onlysubs (e.g. after fb oauth)
 	RegisterUser(ctx context.Context, in *RegisterUserRequest, opts ...grpc.CallOption) (*RegisterUserResponse, error)
-	// Gets a user based on an email address
+	// Gets a os user based on an email address
 	GetUser(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*GetUserResponse, error)
 	// After accessing Square OAuth API, should store access_token for that user
 	// and associate it with the logged in user.
@@ -342,7 +342,7 @@ func (c *userServiceClient) AddSquareAccessToken(ctx context.Context, in *AddSqu
 type UserServiceServer interface {
 	// This RPC is used upon registration to onlysubs (e.g. after fb oauth)
 	RegisterUser(context.Context, *RegisterUserRequest) (*RegisterUserResponse, error)
-	// Gets a user based on an email address
+	// Gets a os user based on an email address
 	GetUser(context.Context, *GetUserRequest) (*GetUserResponse, error)
 	// After accessing Square OAuth API, should store access_token for that user
 	// and associate it with the logged in user.
