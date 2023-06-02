@@ -52,13 +52,13 @@ export const login = () => async (dispatch) => {
     });
 
   if (osUserId) {
-    await loginUser(user.osUserId);
+    await loginUser(userState.osUserId);
   } else {
     const registeredUser = await registerUser(user);
 
-    user.osUserId = registeredUser.os_user_id;
+    userState.osUserId = registeredUser.os_user_id;
 
-    await loginUser(user.osUserId);
+    await loginUser(userState.osUserId);
   }
 
   // temp: use local storage to persist user info for redirect from square oauth

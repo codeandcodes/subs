@@ -42,7 +42,7 @@ export const registerUser = async (user) => {
 export const loginUser = async (osUserId) => {
   // login with username and password is currently not implemented, so we are just passing in the same string for now
   const body = JSON.stringify({
-    osUserId,
+    os_user_id: osUserId,
     username: "osUser",
     password: "abc123"
   });
