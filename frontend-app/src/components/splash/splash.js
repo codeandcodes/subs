@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { login, logout, setCurrentUser } from '../../store/session';
+import { login, logout } from '../../store/session';
+import { useNavigate } from 'react-router-dom';
 
 function Splash() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const user = useSelector(state => state.session.user);
   const [clickedLogin, setClickedLogin] = useState(false);
   const [clickedLogout, setClickedLogout] = useState(false);
@@ -21,6 +23,12 @@ function Splash() {
   const token = 'pretendingthatthisissomekindoftoken123';
   const authorizeUrl = `https://connect.squareupsandbox.com/oauth2/authorize?client_id=${process.env.REACT_APP_SQUARE_APPLICATION_ID}&scope=CUSTOMERS_WRITE+CUSTOMERS_READ&session=false&state=${token}`;
 
+  useEffect(() => {
+    if (user && user.has_square_access_token) {
+      navigate('/feed');
+    } 
+  }, [navigate, user]);
+  
   return (
     <>
       {!!user

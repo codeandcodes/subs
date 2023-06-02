@@ -1,11 +1,12 @@
 import { useDispatch, useSelector } from 'react-redux';
-import { getSubscriptions } from '../../api/subscription';
+// import { getSubscriptions } from '../../api/subscription';
 import { setCurrentUser } from '../../store/session';
 import { useEffect } from 'react';
 
 function Feed() {
   const dispatch = useDispatch();
   const userName = useSelector(state => state.session.user?.displayName);
+  // const subscriptions = useSelector(state => state.subscriptions);
 
   useEffect(() => {
     const loggedInUser = localStorage.getItem('user');
@@ -15,11 +16,17 @@ function Feed() {
     }
   }, []);
 
+  // useEffect(() => {
+  //   dispatch(getSubscriptions());
+  // }, [dispatch]);
+
   const handleClick = () => {
-    getSubscriptions().then(res => {
-      console.log(res);
-    })
+    // getSubscriptions().then(res => {
+    //   console.log(res);
+    // })
   }
+
+  // console.log(subscriptions);
 
   return(
     <div>

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { getOauthToken } from '../../api/oauth';
 import { setUserWithToken } from '../../store/session';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 
 function Authorize() {
   const dispatch = useDispatch();
@@ -12,7 +12,6 @@ function Authorize() {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user'));
   const osUserId = user.osUserId;
-
   const code = searchParams.get('code');
 
   useEffect(() => {
