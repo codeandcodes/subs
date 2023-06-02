@@ -8,8 +8,6 @@ import (
 
 	"cloud.google.com/go/firestore"
 	pb "github.com/codeandcodes/subs/protos"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 type UserService struct {
@@ -73,7 +71,7 @@ func (s *UserService) RegisterUser(ctx context.Context, in *pb.RegisterUserReque
 	} else {
 		message = fmt.Sprintf("No user found with email %v. Creating from scratch.", in.EmailAddress)
 		log.Println(message)
-		_, _, err := s.FsClient.Collection("users").Add(context.Background(), map[string]interface{}{
+		doc, _, err = s.FsClient.Collection("users").Add(context.Background(), map[string]interface{}{
 			"FbUserId":     in.FbUserId,
 			"EmailAddress": in.EmailAddress,
 			"DisplayName":  in.DisplayName,
@@ -140,7 +138,7 @@ func (s *UserService) GetUser(ctx context.Context, in *pb.GetUserRequest) (*pb.G
 	//user not found
 	case len(dsnaps) == 0:
 		log.Printf("User not found with email. Returning nil but no error.")
-		return &pb.GetUserResponse{}, status.Error(codes.NotFound, fmt.Sprintf("User %v not found", in.EmailAddress))
+		return nil, nil
 	// return the user
 	case len(dsnaps) == 1:
 		var fsUser FsUser
