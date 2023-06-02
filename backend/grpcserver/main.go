@@ -83,6 +83,8 @@ type FsSession struct {
 func CreateUnaryInterceptor(fsClient *firestore.Client) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		// Don't enforce auth on RegisterUser endpoint
+		// TODO: if there's a fb access token, then ideally this should verify ownership to email
+		// For now, simply allow registration
 		if info.FullMethod == "/subs.UserService/RegisterUser" {
 			return handler(ctx, req)
 		}

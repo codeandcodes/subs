@@ -8,6 +8,8 @@ import (
 
 	"cloud.google.com/go/firestore"
 	pb "github.com/codeandcodes/subs/protos"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type UserService struct {
@@ -32,25 +34,60 @@ func (e UserNotFoundError) Error() string {
 }
 
 func (e FirestoreError) Error() string {
-	return fmt.Sprintf("Something went wrong with firestore %v", string(e))
+	return fmt.Sprintf("Something went wrong with firestore: %v", string(e))
 }
 
+// See TODO in main.go: hitting this with facebook access token should go through validation flow first.
+// For now assume it's verified
 func (s *UserService) RegisterUser(ctx context.Context, in *pb.RegisterUserRequest) (*pb.RegisterUserResponse, error) {
 	log.Printf("Registering user: %v", in.EmailAddress)
 
-	doc, _, err := s.FsClient.Collection("users").Add(context.Background(), map[string]interface{}{
-		"FbUserId":     in.FbUserId,
-		"EmailAddress": in.EmailAddress,
-		"DisplayName":  in.DisplayName,
-		"PhotoUrl":     in.PhotoUrl,
+	resp, err := s.GetUser(ctx, &pb.GetUserRequest{
+		EmailAddress: in.EmailAddress,
 	})
 	if err != nil {
-		log.Printf("Failed adding user to firestore: %v", err)
 		return nil, err
 	}
 
-	fsUser, err := s.GetUser(ctx, doc.ID)
+	// existing user
+	var doc *firestore.DocumentRef
+	var message string
+	if resp != nil {
+		message = fmt.Sprintf("Existing user found for email %v at %v. Updating user and returning.", in.EmailAddress, resp.OsUserId)
+		log.Println(message)
+		// update user fields token
+		doc = s.FsClient.Collection("users").Doc(resp.GetOsUserId())
+
+		_, err := doc.Set(ctx, map[string]interface{}{
+			"FbUserId":     in.FbUserId,
+			"EmailAddress": in.EmailAddress,
+			"DisplayName":  in.DisplayName,
+			"PhotoUrl":     in.PhotoUrl,
+		}, firestore.MergeAll)
+
+		if err != nil {
+			// Handle any errors in an appropriate way, such as returning them.
+			log.Printf("An error has occurred updating user: %s", err)
+			return nil, err
+		}
+	} else {
+		message = fmt.Sprintf("No user found with email %v. Creating from scratch.", in.EmailAddress)
+		log.Println(message)
+		_, _, err := s.FsClient.Collection("users").Add(context.Background(), map[string]interface{}{
+			"FbUserId":     in.FbUserId,
+			"EmailAddress": in.EmailAddress,
+			"DisplayName":  in.DisplayName,
+			"PhotoUrl":     in.PhotoUrl,
+		})
+		if err != nil {
+			log.Printf("Failed adding user to firestore: %v", err)
+			return nil, err
+		}
+	}
+
+	fsUser, err := s.GetUserWithId(ctx, doc.ID)
 	if err != nil {
+		log.Printf("Failed retrieving just user from firestore: %v", err)
 		return nil, err
 	}
 
@@ -59,7 +96,7 @@ func (s *UserService) RegisterUser(ctx context.Context, in *pb.RegisterUserReque
 		EmailAddress: fsUser.EmailAddress,
 		FbUserId:     fsUser.FbUserId,
 		HttpResponse: &pb.HttpResponse{
-			Message:    "Successfully registered user.",
+			Message:    message,
 			StatusCode: fmt.Sprintf("%d", http.StatusOK),
 		},
 	}, nil
@@ -91,8 +128,39 @@ func (s *UserService) AddSquareAccessToken(ctx context.Context, in *pb.AddSquare
 	}, nil
 }
 
-func (s *UserService) GetUser(ctx context.Context, userId string) (*FsUser, error) {
+func (s *UserService) GetUser(ctx context.Context, in *pb.GetUserRequest) (*pb.GetUserResponse, error) {
+	iter := s.FsClient.Collection("users").Where("EmailAddress", "==", in.EmailAddress).Documents(ctx)
 
+	dsnaps, err := iter.GetAll()
+	if err != nil {
+		return nil, FirestoreError(fmt.Sprintf("%v", err))
+	}
+
+	switch true {
+	//user not found
+	case len(dsnaps) == 0:
+		log.Printf("User not found with email. Returning nil but no error.")
+		return &pb.GetUserResponse{}, status.Error(codes.NotFound, fmt.Sprintf("User %v not found", in.EmailAddress))
+	// return the user
+	case len(dsnaps) == 1:
+		var fsUser FsUser
+		dsnaps[0].DataTo(&fsUser)
+		return &pb.GetUserResponse{
+			OsUserId: dsnaps[0].Ref.ID,
+		}, nil
+
+	// more than one user found
+	default:
+		for _, dsnap := range dsnaps {
+			var fsUser FsUser
+			dsnap.DataTo(&fsUser)
+			log.Printf("Duplicate user %v email %v", fsUser.OsUserId, fsUser.EmailAddress)
+		}
+		return nil, FirestoreError(fmt.Sprintf("Duplicate user found for %v", in.EmailAddress))
+	}
+}
+
+func (s *UserService) GetUserWithId(ctx context.Context, userId string) (*FsUser, error) {
 	dsnap, err := s.FsClient.Collection("users").Doc(userId).Get(ctx)
 	if err != nil {
 		return nil, FirestoreError(fmt.Sprintf("%v", err))

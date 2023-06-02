@@ -111,7 +111,7 @@ func echoMiddleware(next http.Handler) http.Handler {
 // Authentication
 
 type Credentials struct {
-	UserId              string `json:"user_id"`
+	OsUserId            string `json:"os_user_id"`
 	FacebookAccessToken string `json:"facebook_access_token"`
 	Username            string `json:"username"`
 	Password            string `json:"password"`
@@ -128,13 +128,14 @@ func CreateLoginUserHandler(fsClient *firestore.Client) func(http.ResponseWriter
 			return
 		}
 
-		log.Printf("Attempting to login user %v", creds.UserId)
+		log.Printf("Attempting to login user %v", creds.OsUserId)
 
 		// If the request contains a Facebook access token
 		if creds.FacebookAccessToken != "" {
 			// Call Facebook's API to get the user ID associated with the access token
 			res, err := http.Get("https://graph.facebook.com/me?access_token=" + creds.FacebookAccessToken)
 			if err != nil || res.StatusCode != http.StatusOK {
+				log.Printf("Error calling fb graph verification: %v", err)
 				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}
@@ -144,12 +145,22 @@ func CreateLoginUserHandler(fsClient *firestore.Client) func(http.ResponseWriter
 				ID string `json:"id"`
 			}
 			err = json.NewDecoder(res.Body).Decode(&fbResponse)
-			if err != nil || fbResponse.ID != creds.UserId {
+			doc, fsErr := fsClient.Collection("users").Doc(creds.OsUserId).Get(context.Background())
+			var fsUser shared.FsUser
+			if fsErr != nil {
+				log.Printf("Internal error occurred: could not user with os_user_id %v", creds.OsUserId)
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			doc.DataTo(&fsUser)
+
+			if err != nil || fbResponse.ID != fsUser.FbUserId {
+				log.Printf("Authentication error occurred: fbResponseId %v does not match fbUserId in db %v", fbResponse.ID, creds.OsUserId)
 				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}
 		} else if creds.Username != "" && creds.Password != "" {
-			log.Printf("Handling username/password authentication for %v", creds.UserId)
+			log.Printf("Handling username/password authentication for %v", creds.OsUserId)
 			// If the request contains a username and password
 			// TODO: authenticate the username and password against your database
 			// If authentication fails, return unauthorized status
@@ -159,7 +170,7 @@ func CreateLoginUserHandler(fsClient *firestore.Client) func(http.ResponseWriter
 			return
 		}
 
-		log.Printf("User successfully authenticated %v", creds.UserId)
+		log.Printf("User successfully authenticated %v", creds.OsUserId)
 		// Create a new session and session cookie
 		sessionID := generateSessionID()
 
@@ -168,7 +179,7 @@ func CreateLoginUserHandler(fsClient *firestore.Client) func(http.ResponseWriter
 		ss := shared.SessionService{
 			FsClient: fsClient,
 		}
-		_, err = ss.WriteSessionToDb(context.Background(), sessionID, creds.UserId)
+		_, err = ss.WriteSessionToDb(context.Background(), sessionID, creds.OsUserId)
 		if err != nil {
 			log.Printf("Error writing session to Db: %v", err)
 			w.WriteHeader(http.StatusBadRequest)

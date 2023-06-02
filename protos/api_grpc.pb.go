@@ -284,6 +284,7 @@ var CustomerService_ServiceDesc = grpc.ServiceDesc{
 
 const (
 	UserService_RegisterUser_FullMethodName         = "/subs.UserService/RegisterUser"
+	UserService_GetUser_FullMethodName              = "/subs.UserService/GetUser"
 	UserService_AddSquareAccessToken_FullMethodName = "/subs.UserService/AddSquareAccessToken"
 )
 
@@ -293,6 +294,8 @@ const (
 type UserServiceClient interface {
 	// This RPC is used upon registration to onlysubs (e.g. after fb oauth)
 	RegisterUser(ctx context.Context, in *RegisterUserRequest, opts ...grpc.CallOption) (*RegisterUserResponse, error)
+	// Gets a user based on an email address
+	GetUser(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*GetUserResponse, error)
 	// After accessing Square OAuth API, should store access_token for that user
 	// and associate it with the logged in user.
 	AddSquareAccessToken(ctx context.Context, in *AddSquareAccessTokenRequest, opts ...grpc.CallOption) (*AddSquareAccessTokenResponse, error)
@@ -315,6 +318,15 @@ func (c *userServiceClient) RegisterUser(ctx context.Context, in *RegisterUserRe
 	return out, nil
 }
 
+func (c *userServiceClient) GetUser(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*GetUserResponse, error) {
+	out := new(GetUserResponse)
+	err := c.cc.Invoke(ctx, UserService_GetUser_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *userServiceClient) AddSquareAccessToken(ctx context.Context, in *AddSquareAccessTokenRequest, opts ...grpc.CallOption) (*AddSquareAccessTokenResponse, error) {
 	out := new(AddSquareAccessTokenResponse)
 	err := c.cc.Invoke(ctx, UserService_AddSquareAccessToken_FullMethodName, in, out, opts...)
@@ -330,6 +342,8 @@ func (c *userServiceClient) AddSquareAccessToken(ctx context.Context, in *AddSqu
 type UserServiceServer interface {
 	// This RPC is used upon registration to onlysubs (e.g. after fb oauth)
 	RegisterUser(context.Context, *RegisterUserRequest) (*RegisterUserResponse, error)
+	// Gets a user based on an email address
+	GetUser(context.Context, *GetUserRequest) (*GetUserResponse, error)
 	// After accessing Square OAuth API, should store access_token for that user
 	// and associate it with the logged in user.
 	AddSquareAccessToken(context.Context, *AddSquareAccessTokenRequest) (*AddSquareAccessTokenResponse, error)
@@ -342,6 +356,9 @@ type UnimplementedUserServiceServer struct {
 
 func (UnimplementedUserServiceServer) RegisterUser(context.Context, *RegisterUserRequest) (*RegisterUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RegisterUser not implemented")
+}
+func (UnimplementedUserServiceServer) GetUser(context.Context, *GetUserRequest) (*GetUserResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUser not implemented")
 }
 func (UnimplementedUserServiceServer) AddSquareAccessToken(context.Context, *AddSquareAccessTokenRequest) (*AddSquareAccessTokenResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddSquareAccessToken not implemented")
@@ -377,6 +394,24 @@ func _UserService_RegisterUser_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_GetUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUserRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).GetUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_GetUser_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).GetUser(ctx, req.(*GetUserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _UserService_AddSquareAccessToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AddSquareAccessTokenRequest)
 	if err := dec(in); err != nil {
@@ -405,6 +440,10 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RegisterUser",
 			Handler:    _UserService_RegisterUser_Handler,
+		},
+		{
+			MethodName: "GetUser",
+			Handler:    _UserService_GetUser_Handler,
 		},
 		{
 			MethodName: "AddSquareAccessToken",

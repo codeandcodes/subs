@@ -52,6 +52,13 @@ service UserService {
     };
   }
 
+  // Gets a user based on an email address
+  rpc GetUser(GetUserRequest) returns (GetUserResponse) {
+    option (google.api.http) = {
+      get: "/v1/getUser"
+    };
+  }
+
   // After accessing Square OAuth API, should store access_token for that user
   // and associate it with the logged in user.
   rpc AddSquareAccessToken(AddSquareAccessTokenRequest) returns (AddSquareAccessTokenResponse) {
@@ -170,6 +177,14 @@ message RegisterUserResponse {
     string os_user_id = 3;
 
     HttpResponse http_response = 4;
+}
+
+message GetUserRequest {
+  string email_address = 1;
+}
+
+message GetUserResponse {
+  string os_user_id = 1;
 }
 
 // should pull current logged in user from an auth cookie

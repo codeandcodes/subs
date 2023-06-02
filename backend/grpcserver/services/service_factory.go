@@ -54,7 +54,7 @@ func (s *ServiceFactory) validateSquareUser(ctx context.Context) (*shared.FsUser
 		FsClient: s.FsClient,
 	}
 
-	fsUser, err := us.GetUser(ctx, fmt.Sprintf("%v", ctx.Value("UserId")))
+	fsUser, err := us.GetUserWithId(ctx, fmt.Sprintf("%v", ctx.Value("UserId")))
 	if err != nil {
 		return nil, status.Errorf(codes.FailedPrecondition, fmt.Sprintf("Error occurred while retrieving contextual user: %v", err))
 	}

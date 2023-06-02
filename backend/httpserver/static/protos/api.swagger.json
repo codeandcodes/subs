@@ -134,6 +134,37 @@
         ]
       }
     },
+    "/v1/getUser": {
+      "get": {
+        "summary": "Gets a user based on an email address",
+        "operationId": "UserService_GetUser",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/subsGetUserResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "emailAddress",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "UserService"
+        ]
+      }
+    },
     "/v1/registerUser": {
       "post": {
         "summary": "This RPC is used upon registration to onlysubs (e.g. after fb oauth)",
@@ -355,6 +386,14 @@
           "additionalProperties": {
             "$ref": "#/definitions/subsSubscriptionCatalogObject"
           }
+        }
+      }
+    },
+    "subsGetUserResponse": {
+      "type": "object",
+      "properties": {
+        "osUserId": {
+          "type": "string"
         }
       }
     },
