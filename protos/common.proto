@@ -23,9 +23,16 @@ enum DayOfWeek {
 // 2) email address
 // 3) Phone number or other contact methods (e.g. in the future)
 message User {
-    string id = 1;
+    // os user id 
+    string id = 1; 
+
+    // non-optional
     string email_address = 2;
-    string given_name = 3;
+
+    // first name
+    string given_name = 3; 
+
+    // last name
     string family_name = 4;
 
     // populated from Square Customer API
