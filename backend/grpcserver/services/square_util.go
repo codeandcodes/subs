@@ -150,7 +150,7 @@ func CadenceFromString(s string) (pb.SubscriptionFrequency_Cadence, error) {
 func ValidatePayers(in *pb.SubscriptionSetupRequest) error {
 	for _, payer := range in.Payer {
 		// validation
-		if payer.Id == "" || payer.EmailAddress == "" {
+		if payer.Id == "" && payer.EmailAddress == "" {
 			return ValidationError("payer.Id or payer.EmailAddress is empty")
 		}
 	}
