@@ -3,6 +3,7 @@ import { fetchSubscriptions } from '../../store/subscription';
 import { setCurrentUser } from '../../store/session';
 import { useEffect } from 'react';
 import SetupSubscriptionModal from '../setupSubscriptionModal/setupSubscriptionModal';
+import SubscriptionTable from './subscriptionTable';
 
 function Feed() {
   const dispatch = useDispatch();
@@ -30,6 +31,7 @@ function Feed() {
       <p>{userName}</p>
       <a href={authorizeUrl}>authorize square</a>
       <SetupSubscriptionModal />
+      <SubscriptionTable />
     </div>
   )
 

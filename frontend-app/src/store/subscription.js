@@ -10,7 +10,7 @@ const setSubscriptions = (subscriptions) => {
 };
 
 export const fetchSubscriptions = () => async (dispatch) => {
-  const response = getSubscriptions();
+  const response = await getSubscriptions();
 
   dispatch(setSubscriptions(response.subscriptions));
 };
@@ -21,7 +21,7 @@ const subscriptionsReducer = ( state = { subscriptions: null }, action ) => {
   switch (action.type) {
     case GET_SUBSCRIPTIONS:
       newState = Object.assign({}, state);
-      newState.subscriptions = action.payload;
+      newState.subscriptions = action.subscriptions;
       return newState;
     default:
       return state;
