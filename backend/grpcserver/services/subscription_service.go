@@ -53,6 +53,7 @@ func (s *SubscriptionService) SetupSubscription(ctx context.Context, in *pb.Subs
 	if err != nil {
 		return out, status.Errorf(codes.Internal, fmt.Sprintf("Fatal Error in creating customers: %v", err))
 	}
+	log.Printf("Customer Search or Create complete. Resp state: %v", out.CustomerCreationResults)
 
 	// Step 2: Setup Catalog
 	log.Printf("Got request %v", in)
@@ -60,12 +61,14 @@ func (s *SubscriptionService) SetupSubscription(ctx context.Context, in *pb.Subs
 	if err != nil {
 		return out, status.Errorf(codes.InvalidArgument, fmt.Sprintf("Fatal Error in creating catalog object subscription plan: %v", err))
 	}
+	log.Printf("Subscription plan created. Resp state: %v", out.CatalogCreationResult)
 
 	// Step 3: For each Customer, create a subscription
 	err = subService.CreateSubscriptions(ctx, in, out)
 	if err != nil {
 		return out, status.Errorf(codes.InvalidArgument, fmt.Sprintf("Fatal Error in creating subscriptions: %v", err))
 	}
+	log.Printf("Subscriptions created. Resp state: %v", out.SubscriptionCreationResults)
 	return out, nil
 }
 

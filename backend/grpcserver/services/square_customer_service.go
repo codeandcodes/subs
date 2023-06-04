@@ -29,6 +29,7 @@ func (e CustomerCreationError) Error() string {
 // For each payer, will find or create a customer record in Square API
 func (s *SquareCustomerService) SearchOrCreateCustomers(ctx context.Context, in *pb.SubscriptionSetupRequest,
 	response *pb.SubscriptionSetupResponse) error {
+	log.Printf("Calling SearchOrCreateCustomers as %v", ctx.Value("UserId"))
 
 	for _, payer := range in.Payer {
 		customer, httpResponse, err := s.searchOrCreateCustomer(ctx, payer)
@@ -57,13 +58,14 @@ func (s *SquareCustomerService) SearchOrCreateCustomers(ctx context.Context, in 
 
 // Search and retrieve user, or create a user if blank
 func (s *SquareCustomerService) searchOrCreateCustomer(ctx context.Context, payer *pb.User) (*pb.User, *http.Response, error) {
-
+	log.Printf("Calling searchOrCreateCustomer as %v on %v", ctx.Value("UserId"), payer.EmailAddress)
 	foundUser, httpResponse, err := s.searchCustomer(ctx, payer.EmailAddress)
 	if err != nil {
 		log.Printf("User not found %v", payer.EmailAddress)
 	}
 
 	if foundUser != nil {
+		log.Printf("User found, mapping customer for %v", payer.EmailAddress)
 		return MapSquareCustomerToUser(*foundUser), httpResponse, nil
 	}
 
@@ -93,6 +95,7 @@ func (s *SquareCustomerService) searchOrCreateCustomer(ctx context.Context, paye
 // Search for a single customer based on email.
 // First searches, gets ID, then returns square customer directory customer object
 func (s *SquareCustomerService) searchCustomer(ctx context.Context, email_address string) (*square.Customer, *http.Response, error) {
+	log.Printf("Calling searchCustomer as %v on %v", ctx.Value("UserId"), email_address)
 	searchResponse, httpResponse, err := s.Client.CustomersApi.SearchCustomers(ctx, square.SearchCustomersRequest{
 		Limit: 1, // TODO: if there are more than 1, something is wrong, we should fix this
 		Query: &square.CustomerQuery{

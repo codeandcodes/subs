@@ -107,7 +107,6 @@ func MapSquareSubscriptionPlanDataToSubscriptionPlanData(plan square.CatalogSubs
 		Amount: int32(money),
 		SubscriptionFrequency: &pb.SubscriptionFrequency{
 			Cadence:   cadence,
-			StartDate: "Tbd",
 			Periods:   phase.Periods,
 			IsOngoing: true,
 		},
@@ -168,6 +167,7 @@ func GetUUID() string {
 // Return map of plan id: []*pb.Subscription
 func ArrayToMap(list []square.Subscription) map[string][]*pb.Subscription {
 	planMap := make(map[string][]*pb.Subscription)
+	log.Printf("%v", list)
 	for _, sub := range list {
 		if _, ok := planMap[sub.PlanId]; !ok {
 			planMap[sub.PlanId] = make([]*pb.Subscription, 0)
@@ -175,6 +175,7 @@ func ArrayToMap(list []square.Subscription) map[string][]*pb.Subscription {
 		mapped := MapSquareSubscriptionToSub(sub)
 		planMap[sub.PlanId] = append(planMap[sub.PlanId], mapped)
 	}
+	log.Printf("%v", planMap)
 	return planMap
 }
 

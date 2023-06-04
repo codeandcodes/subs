@@ -24,7 +24,7 @@ func (e SquareCatalogError) Error() string {
 // Single Phase, Subscription Phase based on setup request
 func (s *SquareCatalogService) CreateSubscriptionPlan(ctx context.Context, in *pb.SubscriptionSetupRequest,
 	response *pb.SubscriptionSetupResponse) error {
-
+	log.Printf("Calling CreateSubscriptionPlan as %v", ctx.Value("UserId"))
 	currency := square.Currency(square.USD_Currency)
 	subscription_plan := square.CatalogObjectType(square.SUBSCRIPTION_PLAN_CatalogObjectType)
 	cadence := square.SubscriptionCadence(in.SubscriptionFrequency.Cadence.String())

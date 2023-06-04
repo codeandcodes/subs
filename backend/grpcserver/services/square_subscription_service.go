@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 
 	pb "github.com/codeandcodes/subs/protos"
@@ -28,7 +29,7 @@ type SingleSubscriptionRequest struct {
 // Handle all subscriptions for a SubscriptionSetupRequest
 // TODO: this should use an acceptance flow before we start billing
 func (s *SquareSubscriptionService) CreateSubscriptions(ctx context.Context, in *pb.SubscriptionSetupRequest, out *pb.SubscriptionSetupResponse) error {
-
+	log.Printf("Calling CreateSubscriptions as %v", ctx.Value("UserId"))
 	out.SubscriptionCreationResults = make(map[string]*pb.SubscriptionCreationResult)
 
 	for custId, cust := range out.CustomerCreationResults {
@@ -65,6 +66,7 @@ func (s *SquareSubscriptionService) CreateSubscriptions(ctx context.Context, in 
 
 // Create a single subscription
 func (s *SquareSubscriptionService) createSubscription(ctx context.Context, req *SingleSubscriptionRequest) (square.CreateSubscriptionResponse, *http.Response, error) {
+	log.Printf("Calling createSubscription as %v for customer: %v", ctx.Value("UserId"), req.custId)
 	return s.Client.SubscriptionsApi.CreateSubscription(ctx, square.CreateSubscriptionRequest{
 		IdempotencyKey: GetUUID(),
 		PlanId:         req.planId,
@@ -75,6 +77,7 @@ func (s *SquareSubscriptionService) createSubscription(ctx context.Context, req 
 }
 
 func (s *SquareSubscriptionService) SearchSubscriptions(ctx context.Context) (square.SearchSubscriptionsResponse, *http.Response, error) {
+	log.Printf("Calling SearchSubscriptions as %v", ctx.Value("UserId"))
 	return s.Client.SubscriptionsApi.SearchSubscriptions(ctx, square.SearchSubscriptionsRequest{
 		Limit: 1000,
 	})
