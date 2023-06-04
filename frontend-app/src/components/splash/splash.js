@@ -12,19 +12,22 @@ function Splash() {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    return dispatch(login()).then(() => setClickedLogin(true));
+    return dispatch(login());
+    // return dispatch(login()).then(() => setClickedLogin(true));
   };
 
   const handleLogout = (e) => {
     e.preventDefault();
-    return dispatch(logout()).then(() => setClickedLogout(true));
+    return dispatch(logout());
+    // return dispatch(logout()).then(() => setClickedLogout(true));
   }
 
+  const scope = 'CUSTOMERS_READ+PAYMENTS_WRITE+SUBSCRIPTIONS_WRITE+ITEMS_READ+ORDERS_WRITE+INVOICES_WRITE+ITEMS_WRITE+ITEMS_READ+CUSTOMERS_WRITE+SUBSCRIPTIONS_READ+MERCHANT_PROFILE_READ';
   const token = 'pretendingthatthisissomekindoftoken123';
-  const authorizeUrl = `https://connect.squareupsandbox.com/oauth2/authorize?client_id=${process.env.REACT_APP_SQUARE_APPLICATION_ID}&scope=CUSTOMERS_WRITE+CUSTOMERS_READ&session=false&state=${token}`;
+  const authorizeUrl = `https://connect.squareupsandbox.com/oauth2/authorize?client_id=${process.env.REACT_APP_SQUARE_APPLICATION_ID}&scope=${scope}&session=false&state=${token}`;
 
   useEffect(() => {
-    if (user && user.has_square_access_token) {
+    if (user && user.hasSquareAccessToken) {
       navigate('/feed');
     } 
   }, [navigate, user]);

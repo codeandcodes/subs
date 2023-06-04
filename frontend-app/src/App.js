@@ -16,7 +16,7 @@ function App() {
     if (loggedInUser) {
       dispatch(setCurrentUser(JSON.parse(loggedInUser)));
     }
-  });
+  }, []);
 
   return (
     <BrowserRouter>

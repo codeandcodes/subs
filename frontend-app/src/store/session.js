@@ -48,6 +48,10 @@ export const login = () => async (dispatch) => {
     .then((res) => {
       userState.hasSquareAccessToken = res.has_square_access_token;
       userState.osUserId = res.os_user_id;
+
+      // temp: use local storage to persist user info for redirect from square oauth
+      localStorage.setItem('user', JSON.stringify(userState));
+
       return res.os_user_id;
     });
 
@@ -58,12 +62,12 @@ export const login = () => async (dispatch) => {
 
     userState.osUserId = registeredUser.os_user_id;
 
+    localStorage.setItem('user', JSON.stringify(userState));
+
     await loginUser(userState.osUserId);
   }
 
-  // temp: use local storage to persist user info for redirect from square oauth
-  localStorage.setItem('user', JSON.stringify(user));
-
+  console.log("userState after login" + userState);
   dispatch(setUser(userState));
 }
 
