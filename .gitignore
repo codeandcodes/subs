@@ -17,6 +17,7 @@ ios/MyApp.xcodeproj/project.pbxproj
 .DS_Store
 .env
 backend/curl_examples.txt
+backend/curl_examples.sh
 backend/grpcserver/credential.yaml
 backend/grpcserver/*.json
 backend/httpserver/*.json

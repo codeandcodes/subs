@@ -21,23 +21,30 @@ type SquareSubscriptionService struct {
 }
 
 type SingleSubscriptionRequest struct {
-	planId    string
-	custId    string
-	startDate string
+	planId     string
+	custId     string
+	startDate  string
+	locationId string
 }
 
 // Handle all subscriptions for a SubscriptionSetupRequest
 // TODO: this should use an acceptance flow before we start billing
 func (s *SquareSubscriptionService) CreateSubscriptions(ctx context.Context, in *pb.SubscriptionSetupRequest, out *pb.SubscriptionSetupResponse) error {
 	log.Printf("Calling CreateSubscriptions as %v", ctx.Value("UserId"))
+
+	if out.LocationCreationResult == nil || out.LocationCreationResult.Location == nil {
+		return SubscriptionCreationError("User's Location was blank in the response! Cannot create subscriptions.")
+	}
+
 	out.SubscriptionCreationResults = make(map[string]*pb.SubscriptionCreationResult)
 
 	for custId, cust := range out.CustomerCreationResults {
 		if cust.GetUser() != nil {
 			ssr := SingleSubscriptionRequest{
-				planId:    out.CatalogCreationResult.SubscriptionPlan.Id,
-				custId:    cust.GetUser().Id,
-				startDate: in.GetSubscriptionFrequency().StartDate,
+				planId:     out.CatalogCreationResult.SubscriptionPlan.Id,
+				custId:     cust.GetUser().Id,
+				startDate:  in.GetSubscriptionFrequency().StartDate,
+				locationId: out.LocationCreationResult.Location.LocationId,
 			}
 			res, httpResponse, err := s.createSubscription(ctx, &ssr)
 			if err != nil || httpResponse.StatusCode >= 400 {
@@ -72,7 +79,7 @@ func (s *SquareSubscriptionService) createSubscription(ctx context.Context, req 
 		PlanId:         req.planId,
 		CustomerId:     req.custId,
 		StartDate:      req.startDate,
-		LocationId:     "L9A9KDM49WV8Y", // this location comes from developer app
+		LocationId:     req.locationId,
 	})
 }
 

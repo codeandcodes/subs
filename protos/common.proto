@@ -48,31 +48,39 @@ message User {
 
 // Maps onto the SubscriptionPhase from Square APIs
 message SubscriptionFrequency {
-    enum Cadence {
-      DAILY = 0;
-      WEEKLY = 1;
-      EVERY_TWO_WEEKS = 2;
-      THIRTY_DAYS = 3;
-      SIXTY_DAYS = 4;
-      NINETY_DAYS = 5;
-      MONTHLY = 6;
-      EVERY_TWO_MONTHS = 7;
-      QUARTERLY = 8;
-      EVERY_FOUR_MONTHS = 9;
-      EVERY_SIX_MONTHS = 10;
-      ANNUAL = 11;
-      EVERY_TWO_YEARS = 12;
-    }
-  
-    Cadence cadence = 1;
-  
-    // The date of the first occurrence `YYYY-MM-DD`-formatted date
-    string start_date = 2;
-  
-    // This is the number of periods the subscription is active for. It will start on start date.
-    int32 periods = 3;
-
-    // If is_ongoing is set, then this is a continuous subscription
-    // In the square API, this means that period should be removed
-    bool is_ongoing = 4;
+  enum Cadence {
+    DAILY = 0;
+    WEEKLY = 1;
+    EVERY_TWO_WEEKS = 2;
+    THIRTY_DAYS = 3;
+    SIXTY_DAYS = 4;
+    NINETY_DAYS = 5;
+    MONTHLY = 6;
+    EVERY_TWO_MONTHS = 7;
+    QUARTERLY = 8;
+    EVERY_FOUR_MONTHS = 9;
+    EVERY_SIX_MONTHS = 10;
+    ANNUAL = 11;
+    EVERY_TWO_YEARS = 12;
   }
+
+  Cadence cadence = 1;
+
+  // The date of the first occurrence `YYYY-MM-DD`-formatted date
+  string start_date = 2;
+
+  // This is the number of periods the subscription is active for. It will start on start date.
+  int32 periods = 3;
+
+  // If is_ongoing is set, then this is a continuous subscription
+  // In the square API, this means that period should be removed
+  bool is_ongoing = 4;
+}
+
+// Maps to a square location
+message Location {
+  string location_id = 1;
+  string name = 2;
+  string address = 3;
+  string country_code = 4;
+}

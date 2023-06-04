@@ -21,6 +21,11 @@ func (s *SubscriptionService) SetupSubscription(ctx context.Context, in *pb.Subs
 	log.Printf("Calling SetupSubscription as %v", ctx.Value("UserId"))
 
 	// Instantiate services and validate clients
+	locService, err := s.ServiceFactory.NewSquareLocationSErvice(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	custService, err := s.ServiceFactory.NewSquareCustomerService(ctx)
 	if err != nil {
 		return nil, err
@@ -39,10 +44,18 @@ func (s *SubscriptionService) SetupSubscription(ctx context.Context, in *pb.Subs
 	// Call Square services
 
 	out := &pb.SubscriptionSetupResponse{
+		LocationCreationResult:      &pb.LocationCreationResult{},
 		CustomerCreationResults:     make(map[string]*pb.CustomerCreationResult),
 		CatalogCreationResult:       &pb.CatalogCreationResult{},
 		SubscriptionCreationResults: make(map[string]*pb.SubscriptionCreationResult),
 	}
+
+	// Step 1: Create or Return Location
+	locService.CreateLocation(ctx, in, out)
+	if err != nil {
+		return out, status.Errorf(codes.Internal, fmt.Sprintf("Fatal Error in creating or retrieving location: %v", err))
+	}
+	log.Printf("Location creation/retrieval complete. Resp state: %v", out.LocationCreationResult)
 
 	// Step 1: Create Customers
 	err = ValidatePayers(in)

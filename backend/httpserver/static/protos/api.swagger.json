@@ -429,6 +429,35 @@
         }
       }
     },
+    "subsLocation": {
+      "type": "object",
+      "properties": {
+        "locationId": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "countryCode": {
+          "type": "string"
+        }
+      },
+      "title": "Maps to a square location"
+    },
+    "subsLocationCreationResult": {
+      "type": "object",
+      "properties": {
+        "httpResponse": {
+          "$ref": "#/definitions/subsHttpResponse"
+        },
+        "location": {
+          "$ref": "#/definitions/subsLocation"
+        }
+      }
+    },
     "subsRegisterUserRequest": {
       "type": "object",
       "properties": {
@@ -645,6 +674,10 @@
             "$ref": "#/definitions/subsSubscriptionCreationResult"
           },
           "title": "A map of payer IDs to subscription creation results from Square API"
+        },
+        "locationCreationResult": {
+          "$ref": "#/definitions/subsLocationCreationResult",
+          "title": "A single location creation result (always with same name)"
         }
       }
     },
@@ -652,16 +685,20 @@
       "type": "object",
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "title": "os user id"
         },
         "emailAddress": {
-          "type": "string"
+          "type": "string",
+          "title": "non-optional"
         },
         "givenName": {
-          "type": "string"
+          "type": "string",
+          "title": "first name"
         },
         "familyName": {
-          "type": "string"
+          "type": "string",
+          "title": "last name"
         },
         "createdAt": {
           "type": "string",

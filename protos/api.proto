@@ -111,6 +111,9 @@ message SubscriptionSetupResponse {
 
   // A map of payer IDs to subscription creation results from Square API
   map<string, SubscriptionCreationResult> subscription_creation_results = 5;
+
+  // A single location creation result (always with same name)
+  LocationCreationResult location_creation_result = 6;
 }
 
 message GetSubscriptionRequest {
@@ -216,6 +219,16 @@ message CustomerCreationResult {
 message CatalogCreationResult {
   HttpResponse http_response = 1;
   SubscriptionCatalogObject subscription_plan = 2;
+}
+
+message LocationCreationRequest {
+  // The address's country, in the two-letter format of ISO 3166. For example, US or FR.
+  string country_code = 1;
+}
+
+message LocationCreationResult {
+  HttpResponse http_response = 1;
+  Location location = 2;
 }
 
 message SubscriptionCreationResult {

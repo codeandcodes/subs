@@ -15,6 +15,17 @@ type ServiceFactory struct {
 	FsClient *firestore.Client
 }
 
+func (s *ServiceFactory) NewSquareLocationSErvice(ctx context.Context) (*SquareLocationService, error) {
+	fsUser, err := s.validateSquareUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &SquareLocationService{
+		Client: NewSquareClient(fsUser.SquareAccessToken),
+	}, nil
+}
+
 func (s *ServiceFactory) NewSquareCustomerService(ctx context.Context) (*SquareCustomerService, error) {
 	fsUser, err := s.validateSquareUser(ctx)
 	if err != nil {
