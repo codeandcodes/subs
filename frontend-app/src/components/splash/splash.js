@@ -22,7 +22,7 @@ function Splash() {
     // return dispatch(logout()).then(() => setClickedLogout(true));
   }
 
-  const scope = 'CUSTOMERS_READ+PAYMENTS_WRITE+SUBSCRIPTIONS_WRITE+ITEMS_READ+ORDERS_WRITE+INVOICES_WRITE+ITEMS_WRITE+ITEMS_READ+CUSTOMERS_WRITE+SUBSCRIPTIONS_READ+MERCHANT_PROFILE_READ';
+  const scope = 'CUSTOMERS_READ+PAYMENTS_WRITE+SUBSCRIPTIONS_WRITE+ITEMS_READ+ORDERS_WRITE+INVOICES_WRITE+ITEMS_WRITE+ITEMS_READ+CUSTOMERS_WRITE+SUBSCRIPTIONS_READ+MERCHANT_PROFILE_READ+MERCHANT_PROFILE_WRITE';
   const token = 'pretendingthatthisissomekindoftoken123';
   const authorizeUrl = `https://connect.squareupsandbox.com/oauth2/authorize?client_id=${process.env.REACT_APP_SQUARE_APPLICATION_ID}&scope=${scope}&session=false&state=${token}`;
 
