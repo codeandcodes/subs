@@ -69,7 +69,6 @@ func (s *SubscriptionService) SetupSubscription(ctx context.Context, in *pb.Subs
 	log.Printf("Customer Search or Create complete. Resp state: %v", out.CustomerCreationResults)
 
 	// Step 2: Setup Catalog
-	log.Printf("Got request %v", in)
 	err = catService.CreateSubscriptionPlan(ctx, in, out)
 	if err != nil {
 		return out, status.Errorf(codes.InvalidArgument, fmt.Sprintf("Fatal Error in creating catalog object subscription plan: %v", err))
