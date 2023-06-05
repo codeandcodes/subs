@@ -4,9 +4,10 @@ import { setCurrentUser } from '../../store/session';
 import { useEffect } from 'react';
 import SetupSubscriptionModal from '../setupSubscriptionModal/setupSubscriptionModal';
 import SubscriptionTable from './subscriptionTable';
-import Header from '../header/header';
 import {
+  Container,
   Box,
+  Button,
   Typography
 } from '@mui/material';
 
@@ -26,16 +27,14 @@ function Feed() {
   }, [dispatch]);
 
   return(
-    <div>
-      <Header />
+    <Container maxWidth="sm">
       <Box display="flex" alignItems="center" flexDirection="column" sx={{ padding: "24px"}}>
-        <Typography variant="h3" sx={{ paddingBottom: "12px"}}>my subs</Typography>
+        <Typography variant="h4" sx={{ fontWeight: "600", borderBottom: "5px dotted #519872", marginBottom: "12px"}}>current subs</Typography>
         <SetupSubscriptionModal />
       </Box>
       <SubscriptionTable />
-    </div>
+    </Container>
   )
-
 }
 
 export default Feed;

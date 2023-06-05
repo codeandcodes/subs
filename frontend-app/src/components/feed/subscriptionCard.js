@@ -53,20 +53,20 @@ function SubscriptionCard({ subscription }) {
     
       dispatch(getPayerInfo({ customerId, subscriptionId }));
     }))
-  }, []);
+  }, [dispatch]);
 
   return (
     <>
       <Box display="flex" paddingY="12px">
         <Box display="flex" flexDirection="column" justifyContent="center">
-          <Avatar sx={{ bgcolor: "green" }}>
+          <Avatar sx={{ bgcolor: "#519872" }}>
             <Paid />
           </Avatar>
         </Box>
         <Box display="flex" flexDirection="column" flexGrow={1} sx={{ paddingLeft: "12px"}}>
           <Box display="flex" flexDirection="row" justifyContent="space-between">
             <Typography variant="h6" component="span" fontWeight="600">{name}</Typography>
-            <Typography variant="h6" component="span" sx={{ color: "green" }} >{amount}</Typography>
+            <Typography variant="h6" component="span" sx={{ color: "#519872", fontWeight: "600" }} >{amount}</Typography>
           </Box>
           <Typography>Start Date: {startDate}</Typography>
           <Typography>{frequency}</Typography>

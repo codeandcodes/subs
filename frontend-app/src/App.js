@@ -5,8 +5,7 @@ import Feed from './components/feed/feed';
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { setCurrentUser } from './store/session';
-import { Container } from '@mui/material';
-
+import Header from './components/header/header';
 function App() {
   const dispatch = useDispatch();
 
@@ -20,13 +19,12 @@ function App() {
 
   return (
     <BrowserRouter>
-      <Container maxWidth="sm">
-        <Routes>
-          <Route path='/' element={<Splash />} />
-          <Route path='/authorize' element={<Authorize />} />
-          <Route path='/feed' element={<Feed />} />
-        </Routes>
-      </Container>
+      <Header />
+      <Routes>
+        <Route path='/' element={<Splash />} />
+        <Route path='/authorize' element={<Authorize />} />
+        <Route path='/feed' element={<Feed />} />
+      </Routes>
     </BrowserRouter>
   );
 }

@@ -13,7 +13,7 @@ function SubscriptionTable() {
     <div>
       {Object.values(subscriptions).filter(Boolean).map((subscriptionPlan) => {
           if (subscriptionPlan.subscriptions && subscriptionPlan.subscriptions.length > 0) {
-            return <SubscriptionCard subscription={subscriptionPlan} />;
+            return <SubscriptionCard subscription={subscriptionPlan} key={subscriptionPlan.id}/>;
           }
         })
       }

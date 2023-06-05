@@ -1,6 +1,7 @@
 import { signInWithPopup, FacebookAuthProvider, getAuth, signOut } from 'firebase/auth';
 import { authentication } from '../firebase-config';
 import { addSquareAccessToken, registerUser, loginUser, getUser } from '../api/user';
+import { revokeOauthToken } from '../api/oauth';
 
 const SET_USER = 'setUser';
 const REMOVE_USER = 'removeUser';

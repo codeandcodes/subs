@@ -18,3 +18,23 @@ export const getOauthToken = async (code) => {
 
   return response;
 }
+
+export const revokeOauthToken = async (accessToken) => {
+  const body = JSON.stringify({
+    access_token: accessToken,
+    client_id: process.env.REACT_APP_SQUARE_APPLICATION_ID
+  });
+
+  const requestOptions = {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Client ${process.env.REACT_APP_SQUARE_CLIENT_SECRET}`
+    }
+  }
+
+  const response = await fetch('https://connect.squareupsandbox.com/oauth2/token', requestOptions)
+  .then((res) => res.json());
+
+  return response;
+}

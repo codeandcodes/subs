@@ -7,41 +7,40 @@ import {
   Toolbar,
   Typography
 } from '@mui/material';
-import { useSelector } from 'react-redux';
-import { useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { useEffect, useState } from 'react';
+import { logout } from '../../store/session';
+import { useNavigate } from 'react-router-dom';
 
 function Header() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const user = useSelector(state => state.session.user);
-  const [anchorEl, setAnchorEl] = useState(null);
-
-  // const handleChange = (event) => {
-  //   setAuth(event.target.checked);
-  // };
-
-  const handleMenu = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
 
   const handleLogout = () => {
-    console.log("logout");
+    return dispatch(logout());
   };
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/');
+    }
+  }, [navigate, user])
 
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar position="static">
         <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+          <Typography variant="h5" component="div" sx={{ flexGrow: 1, fontWeight: "600" }}>
             onlySubs.
           </Typography>
           {user &&
             <Box display="flex" alignItems="center" aria-controls="menu-appbar">
               <Avatar alt={user.displayName} src={user.photoUrl} />
               <Typography sx={{ paddingLeft: '8px' }}>{user.displayName}</Typography>
-              <Button onClick={handleLogout} style={{ color: 'white' }}>LOGOUT</Button>
+              <Button onClick={handleLogout} style={{ color: 'white' }}>
+                <Typography variant="button">LOGOUT</Typography>
+              </Button>
             </Box>
           }
         </Toolbar>
