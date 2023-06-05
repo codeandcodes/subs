@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import Modal from 'react-modal';
-import { setupSubscription } from '../../api/subscription';
 import CadencePicker from './cadencePicker';
 import { useSelector } from 'react-redux';
 import {
@@ -12,12 +11,15 @@ import {
   DialogActions,
   TextField
 } from '@mui/material';
+import { useDispatch } from 'react-redux';
+import { addNewSubscription } from '../../store/subscription';
 
 Modal.setAppElement('#root');
 
 function SetupSubscriptionModal() {
+  const dispatch = useDispatch();
   const [modalIsOpen, setIsOpen] = useState(false);
-  const [name, setName] = useState('');
+  const [name, setName] = useState('defaultName');
   const [amount, setAmount] = useState(0);
   const [description, setDescription] = useState('');
   const [payerEmail, setPayerEmail] = useState('');
@@ -28,10 +30,8 @@ function SetupSubscriptionModal() {
   const [error, setError] = useState(null);
   const user = useSelector(state => state.session.user);
 
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-
-  const formattedTomorrow = tomorrow.toISOString().split('T')[0];
+  const today = new Date();
+  const formattedToday = today.toISOString().split('T')[0];
 
   const openModal = () => {
     setIsOpen(true);
@@ -69,7 +69,7 @@ function SetupSubscriptionModal() {
     setIsLoading(true);
     setError(null);
     try {
-      await setupSubscription(body);
+      dispatch(addNewSubscription(body));
       setIsOpen(false);
     } catch (err) {
       setError(err.message);
@@ -127,7 +127,6 @@ function SetupSubscriptionModal() {
                   onChange={(e) => setStartDate(e.target.value)}
                   variant="standard"
                   type="date"
-                  inputProps={{ min: {formattedTomorrow} }}
                   fullWidth
                 />
                 <TextField

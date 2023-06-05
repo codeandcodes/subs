@@ -85,13 +85,7 @@ export const logout = () => async (dispatch) => {
 }
 
 export const setUserWithToken = (token) => async (dispatch) => {
-  // ** don't need this from local storage anymore?
   const loggedInUser = JSON.parse(localStorage.getItem('user'));
-
-  // loggedInUser.squareAccessToken = token;
-  // loggedInUser.osUserId = osUserId;
-
-  // localStorage.setItem('user', JSON.stringify(loggedInUser));
 
   const addTokenResponse = await addSquareAccessToken(token);
   // handle response

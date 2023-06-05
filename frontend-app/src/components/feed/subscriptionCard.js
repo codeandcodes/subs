@@ -5,6 +5,10 @@ import {
   Typography
 } from '@mui/material';
 import { Paid } from '@mui/icons-material';
+import { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { getPayerInfo } from '../../store/subscription';
+import { formatFrequency } from '../../utils/format-frequency';
 
 // subscription: {
 //   subscription_plan_data: {
@@ -24,15 +28,32 @@ import { Paid } from '@mui/icons-material';
 // }
 
 function SubscriptionCard({ subscription }) {
+  const dispatch = useDispatch();
+
   const name = subscription.subscription_plan_data.name;
-  const amount = `\$${subscription.subscription_plan_data.amount}`;
-  
+  const amount = (subscription.subscription_plan_data.amount/100).toLocaleString('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  });
+  const subscriptions = useSelector(state => state.subscriptions);
+  const currentSubscription = subscriptions[subscription.id];
+
   // TODO: convert frequncy to readable string and calculate end date from periods
-  const frequency = subscription.subscription_plan_data.subscription_frequency.cadence;
+  const cadence = subscription.subscription_plan_data.subscription_frequency.cadence;
   const periods = subscription.subscription_plan_data.subscription_frequency.periods;
 
-  // iterate through subscriptions for payers
   const startDate = subscription.subscriptions[0].start_date;
+  const frequency = formatFrequency({ cadence, periods, startDate });
+
+  useEffect(() => {
+    const subscriptionId = subscription.id;
+
+    subscription.subscriptions.map((customerSubscription => {
+      const customerId = customerSubscription.customer_id;
+    
+      dispatch(getPayerInfo({ customerId, subscriptionId }));
+    }))
+  }, []);
 
   return (
     <>
@@ -45,12 +66,20 @@ function SubscriptionCard({ subscription }) {
         <Box display="flex" flexDirection="column" flexGrow={1} sx={{ paddingLeft: "12px"}}>
           <Box display="flex" flexDirection="row" justifyContent="space-between">
             <Typography variant="h6" component="span" fontWeight="600">{name}</Typography>
-            <Typography variant="h6" component="span">{amount}</Typography>
+            <Typography variant="h6" component="span" sx={{ color: "green" }} >{amount}</Typography>
           </Box>
           <Typography>Start Date: {startDate}</Typography>
           <Typography>{frequency}</Typography>
-          <Typography>{periods}</Typography>
-          <Divider />
+          <Box>
+            {subscription.payers && Object.values(subscription.payers).map((payer) => {
+              return (
+                <>
+                  <Typography>Payer: {payer.email_address}</Typography>
+                </>
+              )
+            })}
+          </Box>
+          <Divider sx={{ paddingTop: "12px" }} />
         </Box>
       </Box>
     </>

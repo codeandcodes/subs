@@ -1,4 +1,4 @@
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { fetchSubscriptions } from '../../store/subscription';
 import { setCurrentUser } from '../../store/session';
 import { useEffect } from 'react';
@@ -7,13 +7,11 @@ import SubscriptionTable from './subscriptionTable';
 import Header from '../header/header';
 import {
   Box,
-  Button,
   Typography
 } from '@mui/material';
 
 function Feed() {
   const dispatch = useDispatch();
-  const userName = useSelector(state => state.session.user?.displayName);
 
   useEffect(() => {
     const loggedInUser = localStorage.getItem('user');
