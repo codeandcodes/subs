@@ -3,6 +3,15 @@ import Modal from 'react-modal';
 import { setupSubscription } from '../../api/subscription';
 import CadencePicker from './cadencePicker';
 import { useSelector } from 'react-redux';
+import {
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  TextField
+} from '@mui/material';
 
 Modal.setAppElement('#root');
 
@@ -71,97 +80,75 @@ function SetupSubscriptionModal() {
 
   return (
     <div>
-      <button onClick={openModal}>Setup New Subscription</button>
-
-      <Modal
-        isOpen={modalIsOpen}
-        onRequestClose={closeModal}
-        contentLabel="Example Modal"
-      >
-        {isLoading ? (
+      {isLoading ? (
           <div>Loading...</div>
         ) : error ? (
           <div>Error: {error}</div>
         ) : (
-          // Render the form when not loading and no error
           <div>
-          <button onClick={closeModal}>close</button>
-          <div>New subscription</div>
-          <form onSubmit={handleSubmit}>
-            <div>
-              <label>
-                Name:
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
-              </label>
-            </div>
-            <div>
-              <label>
-                description:
-                <input
-                  type="text"
+            <Button variant="outlined" size="small" onClick={openModal}>Setup New Subscription</Button>
+            <Dialog open={modalIsOpen} onClose={closeModal}>
+              <DialogTitle>Set up subscription</DialogTitle>
+              <DialogContent>
+                <DialogContentText>
+                  Some kind of description about setting up your subscription plan.
+                </DialogContentText>
+                <TextField
+                  id="description"
+                  label="Description"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
+                  variant="standard"
+                  fullWidth
                 />
-              </label>
-            </div>
-            <div>
-              <label>
-                amount:
-                <input
-                  type="number"
+                <TextField
+                  id="amount"
+                  label="Amount"
                   value={amount}
-                  min="100"
                   onChange={(e) => setAmount(e.target.value)}
+                  variant="standard"
+                  type="number"
+                  inputProps={{ min: 100 }}
+                  fullWidth
                 />
-              </label>
-            </div>
-            <div>
-              <p>Payer information</p>
-              <div>
-                  <label>
-                    email address:
-                    <input
-                      type="string"
-                      value={payerEmail}
-                      onChange={(e) => setPayerEmail(e.target.value)}
-                    />
-                  </label>
-                </div>
-            </div>
-            <div>
-              <p>Details</p>
-              <div>
-                <label>
-                      Start Date:
-                      <input
-                        type="date"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        // min={formattedTomorrow}
-                      />
-                    </label>
-                </div>
-              <div>
-                <label>
-                      periods:
-                      <input
-                        type="number"
-                        value={periods}
-                        onChange={(e) => setPeriods(e.target.value)}
-                      />
-                    </label>
-                </div>
-            </div>
-            <CadencePicker cadence={cadence} setCadence={setCadence}/>
-            <button type="submit">Submit</button>
-          </form>
+                <TextField
+                  id="payer"
+                  label="From"
+                  value={payerEmail}
+                  onChange={(e) => setPayerEmail(e.target.value)}
+                  variant="standard"
+                  type="email"
+                  fullWidth
+                />
+                <TextField
+                  id="startDate"
+                  label="Start Date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  variant="standard"
+                  type="date"
+                  inputProps={{ min: {formattedTomorrow} }}
+                  fullWidth
+                />
+                <TextField
+                  id="periods"
+                  label="Periods"
+                  value={periods}
+                  onChange={(e) => setPeriods(e.target.value)}
+                  variant="standard"
+                  type="number"
+                  inputProps={{ min: 1 }}
+                  fullWidth
+                />
+                <CadencePicker cadence={cadence} setCadence={setCadence}/>
+                <DialogActions>
+                  <Button onClick={closeModal}>Cancel</Button>
+                  <Button onClick={handleSubmit}>Submit</Button>
+                </DialogActions>
+              </DialogContent>
+            </Dialog>
           </div>
         )}
-      </Modal>
     </div>
   );
 };

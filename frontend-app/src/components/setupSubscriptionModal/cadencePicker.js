@@ -1,3 +1,11 @@
+import {
+  FormControl,
+  FormControlLabel,
+  FormLabel,
+  Radio,
+  RadioGroup
+} from '@mui/material';
+
 function CadencePicker({cadence, setCadence}) {
 
   const handleOptionChange = (e) => {
@@ -6,43 +14,20 @@ function CadencePicker({cadence, setCadence}) {
 
   return(
     <div>
-      <p>Frequency</p>
-      <label>
-        <input
-          type='radio'
-          value='DAILY'
-          checked={cadence === 'DAILY'}
+      <FormControl>
+        <FormLabel id="cadence-group">Frequency</FormLabel>
+        <RadioGroup
+          aria-labelledby="cadence-group"
+          name="cadence"
+          value={cadence}
           onChange={handleOptionChange}
-        />
-        Daily
-      </label>
-      <label>
-        <input
-          type='radio'
-          value='WEEKLY'
-          checked={cadence === 'WEEKLY'}
-          onChange={handleOptionChange}
-        />
-        Weekly
-      </label>
-      <label>
-        <input
-          type='radio'
-          value='EVERY_TWO_WEEKS'
-          checked={cadence === 'EVERY_TWO_WEEKS'}
-          onChange={handleOptionChange}
-        />
-        Every two weeks
-      </label>
-      <label>
-        <input
-          type='radio'
-          value='MONTHLY'
-          checked={cadence === 'MONTHLY'}
-          onChange={handleOptionChange}
-        />
-        Monthly
-      </label>
+        >
+          <FormControlLabel value="DAILY" control={<Radio />} label="Daily" />
+          <FormControlLabel value="WEEKLY" control={<Radio />} label="Weekly" />
+          <FormControlLabel value="EVERY_TWO_WEEKS" control={<Radio />} label="Every two weeks" />
+          <FormControlLabel value="MONTHLY" control={<Radio />} label="Monthly" />
+        </RadioGroup>
+      </FormControl>
     </div>
   )
   
