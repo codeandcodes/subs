@@ -26,13 +26,13 @@ function SetupSubscriptionModal() {
   const [payerEmail, setPayerEmail] = useState('');
   const [periods, setPeriods] = useState(undefined);
   const [cadence, setCadence] = useState('');
-  const [startDate, setStartDate] = useState(undefined);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const user = useSelector(state => state.session.user);
 
   const today = new Date();
   const formattedToday = today.toISOString().split('T')[0];
+  const [startDate, setStartDate] = useState(formattedToday);
 
   const openModal = () => {
     setIsOpen(true);
@@ -56,7 +56,7 @@ function SetupSubscriptionModal() {
     event.preventDefault();
 
     if (amount && periods && startDate && description.length > 0 &&
-        payerEmail.length > 0 && cadence > 0) {
+        payerEmail.length > 0 && cadence.length) {
           const body = {
             name,
             description,
