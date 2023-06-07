@@ -119,6 +119,14 @@ type Credentials struct {
 
 func CreateLoginUserHandler(fsClient *firestore.Client) func(http.ResponseWriter, *http.Request) {
 
+	us := shared.UserService{
+		FsClient: fsClient,
+	}
+
+	ss := shared.SessionService{
+		FsClient: fsClient,
+	}
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Parse and decode the request body
 		var creds Credentials
@@ -145,14 +153,13 @@ func CreateLoginUserHandler(fsClient *firestore.Client) func(http.ResponseWriter
 				ID string `json:"id"`
 			}
 			err = json.NewDecoder(res.Body).Decode(&fbResponse)
-			doc, fsErr := fsClient.Collection("users").Doc(creds.OsUserId).Get(context.Background())
-			var fsUser shared.FsUser
+
+			fsUser, fsErr := us.GetUserWithId(context.Background(), creds.OsUserId)
 			if fsErr != nil {
 				log.Printf("Internal error occurred: could not user with os_user_id %v", creds.OsUserId)
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
-			doc.DataTo(&fsUser)
 
 			if err != nil || fbResponse.ID != fsUser.FbUserId {
 				log.Printf("Authentication error occurred: fbResponseId %v does not match fbUserId in db %v", fbResponse.ID, creds.OsUserId)
@@ -176,9 +183,6 @@ func CreateLoginUserHandler(fsClient *firestore.Client) func(http.ResponseWriter
 
 		// Save to DB
 		log.Printf("New session token %v", sessionID)
-		ss := shared.SessionService{
-			FsClient: fsClient,
-		}
 		_, err = ss.WriteSessionToDb(context.Background(), sessionID, creds.OsUserId)
 		if err != nil {
 			log.Printf("Error writing session to Db: %v", err)
@@ -223,6 +227,7 @@ func generateSessionID() string {
 func main() {
 
 	configPath := flag.String("config", "config.yaml", "path to the config file")
+	enableTls := flag.Bool("enable-tls", false, "set to true to enable tls")
 
 	flag.Parse()
 
@@ -281,10 +286,21 @@ func main() {
 	// Server swagger json - in a prod app, don't serve this
 	httpmux.Handle("/static/protos/api.swagger.json", enableCORS(http.StripPrefix("/static/protos", http.FileServer(http.Dir("./static/protos")))))
 
-	fs := http.FileServer(http.Dir("./build"))
 	http.Handle("/build/.well-known/", http.StripPrefix("/.well-known/", http.FileServer(http.Dir("./certbot/well-known"))))
 
-	httpmux.HandleFunc("/", fs.ServeHTTP)
+	httpmux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		// Check if the file exists in the filesystem
+		path := "./build" + r.URL.Path
+		_, err := os.Stat(path)
+
+		// If the file doesn't exist or if the path is a directory,
+		// serve index.html. Otherwise, serve the file.
+		if os.IsNotExist(err) || os.IsExist(err) {
+			http.ServeFile(w, r, "./build/index.html")
+		} else {
+			http.ServeFile(w, r, path)
+		}
+	})
 
 	httpmux.HandleFunc("/location", func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("Hello, this is the location route!"))
@@ -304,9 +320,12 @@ func main() {
 	go heartbeat()
 
 	// Start the HTTP server with the mux as the default handler.
-	err = http.ListenAndServe(":3000", mux)
-	if err != nil {
-		log.Fatalf("failed to start HTTP server: %v", err)
+	if *enableTls == true {
+		log.Fatal(http.ListenAndServeTLS(":443", "fullchain.pem", "privkey.pem", mux))
+	} else {
+		err = http.ListenAndServe(":3000", mux)
+		if err != nil {
+			log.Fatalf("failed to start HTTP server: %v", err)
+		}
 	}
-
 }
