@@ -1,5 +1,15 @@
 # Onlysubs/Sugarbaby
 
+## Try it out
+
+[OnlySubs Dev](https://onlysubs-dev.com)
+
+**Instructions**
+
+1. Click 'Login with Facebook'. 
+2. Hit 'Authorize'. If you see this text: "To start the OAuth flow for a sandbox account, first launch the seller test account from the Developer Dashboard.", you'll then need to enable Square OAuth to create a subscription. Open up your square sandbox account in order to do this in square developer dashboard.
+3. You will then see a list of current subscriptions. You can also try it out hit "Setup New Subscription".
+
 ## Installation Steps
 
 ### Prerequisites
@@ -247,3 +257,7 @@ Productionization
 6) enable TLS on https.go (copy of main.go) which uses log.Fatal(http.ListenAndServeTLS(":443", "path/to/cert.pem", "path/to/key.pem", mux))
 7) sudo go run https.go because port <1024 (e.g. https 443) traffic requires root
 8) add domain to firebase https://onlysubs-dev.com/
+9) Open up IP routes table in ec2 instance:
+  262  sudo iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 8080
+  263  sudo iptables -A INPUT -p tcp -m tcp --sport 80 -j ACCEPT
+  264  sudo iptables -A OUTPUT -p tcp -m tcp --dport 80 -j ACCEPT
