@@ -2,7 +2,7 @@
 
 ## Try it out
 
-[OnlySubs Dev](https://onlysubs-dev.com)
+**Hosted online @ [OnlySubs Dev](https://onlysubs-dev.com)**
 
 **Instructions**
 
