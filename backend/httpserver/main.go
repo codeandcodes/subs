@@ -281,7 +281,8 @@ func main() {
 	// Server swagger json - in a prod app, don't serve this
 	httpmux.Handle("/static/protos/api.swagger.json", enableCORS(http.StripPrefix("/static/protos", http.FileServer(http.Dir("./static/protos")))))
 
-	fs := http.FileServer(http.Dir("../../frontend"))
+	fs := http.FileServer(http.Dir("./build"))
+	http.Handle("/build/.well-known/", http.StripPrefix("/.well-known/", http.FileServer(http.Dir("./certbot/well-known"))))
 
 	httpmux.HandleFunc("/", fs.ServeHTTP)
 
