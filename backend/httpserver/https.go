@@ -281,10 +281,21 @@ func main() {
 	// Server swagger json - in a prod app, don't serve this
 	httpmux.Handle("/static/protos/api.swagger.json", enableCORS(http.StripPrefix("/static/protos", http.FileServer(http.Dir("./static/protos")))))
 
-	fs := http.FileServer(http.Dir("./build"))
 	http.Handle("/build/.well-known/", http.StripPrefix("/.well-known/", http.FileServer(http.Dir("./certbot/well-known"))))
 
-	httpmux.HandleFunc("/", fs.ServeHTTP)
+	httpmux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		// Check if the file exists in the filesystem
+		path := "./build" + r.URL.Path
+		_, err := os.Stat(path)
+
+		// If the file doesn't exist or if the path is a directory,
+		// serve index.html. Otherwise, serve the file.
+		if os.IsNotExist(err) || os.IsExist(err) {
+			http.ServeFile(w, r, "./build/index.html")
+		} else {
+			http.ServeFile(w, r, path)
+		}
+	})
 
 	httpmux.HandleFunc("/location", func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("Hello, this is the location route!"))

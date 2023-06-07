@@ -236,3 +236,14 @@ To make API calls from the backend, follow the steps above in ### API Documentat
 
 If you see ```User %v has no associated square access token. Cannot call square services.``` 
 then you probably haven't associated your square access token. Go through square oauth to get an access token, then store it via the /v1/addSquareAccessToken or directly in the db.
+
+Productionization
+
+1) npm run build - to build
+2) mv subs/frontend-app/build to subs/backend/httpserver (need to serve out of go httpserver)
+3) redirect onlysubs-dev.com to IP address per ec2
+4) generate certs from certbot 
+5) ensure that build/.well-known can be served
+6) enable TLS on https.go (copy of main.go) which uses log.Fatal(http.ListenAndServeTLS(":443", "path/to/cert.pem", "path/to/key.pem", mux))
+7) sudo go run https.go because port <1024 (e.g. https 443) traffic requires root
+8) add domain to firebase https://onlysubs-dev.com/
